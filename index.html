@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>まなびクエスト 中1 — 科学的ゲーミング学習</title>
+<style>
+  :root{
+    --bg:#0f1425; --panel:#1a2138; --panel2:#222b4a; --line:#2e3a63;
+    --text:#eef1fb; --sub:#9aa5c9;
+    --math:#4f8ef7; --eng:#f75f6d; --jpn:#f7a44f; --sci:#3ecf8e; --soc:#b48ef7;
+    --gold:#ffd166; --ok:#3ecf8e; --ng:#f75f6d;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{
+    font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,sans-serif;
+    background:radial-gradient(1200px 600px at 50% -100px,#1b2445,var(--bg));
+    color:var(--text); min-height:100vh;
+  }
+  #app{max-width:540px;margin:0 auto;padding:16px 16px 120px;}
+  h1{font-size:22px} h2{font-size:18px;margin-bottom:10px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;}
+  .row{display:flex;align-items:center;gap:10px;}
+  .grow{flex:1}
+  .sub{color:var(--sub);font-size:13px;line-height:1.6}
+  .big{font-size:26px;font-weight:800}
+  button{
+    font-family:inherit;border:none;border-radius:14px;cursor:pointer;
+    font-size:16px;font-weight:700;color:var(--text);
+  }
+  .btn-main{
+    width:100%;padding:16px;background:linear-gradient(135deg,#5b7cfa,#8a5bfa);
+    box-shadow:0 6px 20px rgba(90,110,250,.35);margin-top:6px;
+  }
+  .btn-main:active{transform:scale(.98)}
+  .btn-sub{width:100%;padding:13px;background:var(--panel2);border:1px solid var(--line);margin-top:8px;}
+  .btn-ghost{background:none;color:var(--sub);font-size:14px;padding:8px;font-weight:600}
+  /* XP bar */
+  .xpbar{height:12px;background:#0c1020;border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+  .xpbar>div{height:100%;background:linear-gradient(90deg,#ffd166,#ff9f43);transition:width .5s}
+  .masterybar{height:8px;background:#0c1020;border-radius:99px;overflow:hidden}
+  .masterybar>div{height:100%;transition:width .5s}
+  .pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;background:var(--panel2);border:1px solid var(--line)}
+  /* quiz */
+  .qtext{font-size:19px;font-weight:700;line-height:1.7;margin:14px 0 18px}
+  .choice{
+    display:block;width:100%;text-align:left;padding:14px 16px;margin-bottom:10px;
+    background:var(--panel2);border:2px solid var(--line);border-radius:14px;
+    font-size:16px;font-weight:600;line-height:1.5;
+  }
+  .choice:active{transform:scale(.99)}
+  .choice.correct{border-color:var(--ok);background:rgba(62,207,142,.15)}
+  .choice.wrong{border-color:var(--ng);background:rgba(247,95,109,.15)}
+  .choice.dim{opacity:.45}
+  .feedback{border-radius:14px;padding:14px;margin-top:6px;font-size:14px;line-height:1.7;animation:pop .25s}
+  .feedback.ok{background:rgba(62,207,142,.12);border:1px solid var(--ok)}
+  .feedback.ng{background:rgba(247,95,109,.12);border:1px solid var(--ng)}
+  @keyframes pop{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+  .progress{height:10px;background:#0c1020;border-radius:99px;overflow:hidden;margin:8px 0 4px}
+  .progress>div{height:100%;background:linear-gradient(90deg,#3ecf8e,#4f8ef7);transition:width .3s}
+  /* nav */
+  nav{
+    position:fixed;bottom:0;left:0;right:0;background:rgba(15,20,37,.95);
+    border-top:1px solid var(--line);backdrop-filter:blur(8px);z-index:10;
+  }
+  nav .inner{max-width:540px;margin:0 auto;display:flex}
+  nav button{flex:1;background:none;padding:10px 4px 14px;font-size:11px;color:var(--sub);font-weight:600}
+  nav button.active{color:var(--gold)}
+  nav .ico{display:block;font-size:20px;margin-bottom:2px}
+  .badge{
+    display:flex;gap:12px;align-items:center;background:var(--panel2);
+    border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;
+  }
+  .badge.locked{opacity:.4;filter:grayscale(1)}
+  .badge .bemoji{font-size:30px}
+  .unit-btn{
+    display:flex;align-items:center;gap:10px;width:100%;padding:13px 14px;margin-bottom:8px;
+    background:var(--panel2);border:1px solid var(--line);border-radius:12px;text-align:left;font-size:15px;
+  }
+  .streak-flame{font-size:34px;filter:drop-shadow(0 0 8px rgba(255,160,60,.6))}
+  .science h3{font-size:15px;margin:16px 0 6px;color:var(--gold)}
+  .science p{font-size:14px;line-height:1.8;color:#cdd5ef}
+  .science cite{display:block;font-size:12px;color:var(--sub);margin-top:4px;font-style:normal}
+  .result-emoji{font-size:56px;text-align:center;margin:10px 0}
+  .stat3{display:flex;text-align:center;margin:14px 0}
+  .stat3>div{flex:1}
+  .stat3 .v{font-size:22px;font-weight:800}
+  .stat3 .k{font-size:12px;color:var(--sub)}
+  .duechip{font-size:12px;color:var(--sub)}
+  .center{text-align:center}
+  a{color:#8fb3ff}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav><div class="inner" id="nav"></div></nav>
+
+<script>
+"use strict";
+/* =====================================================================
+   まなびクエスト 中1
+   根拠のある学習メカニズム:
+   - 間隔反復 (Ebbinghaus 1885; Cepeda et al. 2006)
+   - 検索練習・テスト効果 (Roediger & Karpicke 2006)
+   - 即時フィードバック (Hattie & Timperley 2007)
+   - インターリービング (Rohrer & Taylor 2007)
+   - 習慣化・動機づけ (Deci & Ryan; Hamari et al. 2014)
+   ===================================================================== */
+
+const SUBJECTS = {
+  math:{name:"数学", emoji:"🧮", color:"var(--math)"},
+  eng :{name:"英語", emoji:"🗣️", color:"var(--eng)"},
+  jpn :{name:"国語", emoji:"📖", color:"var(--jpn)"},
+  sci :{name:"理科", emoji:"🔬", color:"var(--sci)"},
+  soc :{name:"社会", emoji:"🌏", color:"var(--soc)"},
+};
+
+/* 問題バンク: c[0]が正解（表示時にシャッフル） */
+const BANK = [
+/* ===== 数学・正負の数 ===== */
+{s:"math",u:"正負の数",q:"(−3)+(−5) を計算すると？",c:["−8","−2","8","2"],e:"同符号の2数の和は、絶対値の和に共通の符号をつけます。3+5=8 で符号は−。"},
+{s:"math",u:"正負の数",q:"4−(−6) を計算すると？",c:["10","−2","2","−10"],e:"−(−6) は +6 に直せます。4+6=10。"},
+{s:"math",u:"正負の数",q:"(−2)×(−7) を計算すると？",c:["14","−14","9","−9"],e:"負×負＝正。2×7=14。"},
+{s:"math",u:"正負の数",q:"(−12)÷4 を計算すると？",c:["−3","3","−8","8"],e:"負÷正＝負。12÷4=3 で符号は−。"},
+{s:"math",u:"正負の数",q:"−5 の絶対値は？",c:["5","−5","0","1/5"],e:"絶対値は数直線上での0からの距離。符号を取った値になります。"},
+{s:"math",u:"正負の数",q:"(−3)² を計算すると？",c:["9","−9","6","−6"],e:"(−3)×(−3)=9。負の数を偶数回かけると正になります。"},
+{s:"math",u:"正負の数",q:"−3² を計算すると？",c:["−9","9","−6","6"],e:"−3² は「3² にマイナスをつけたもの」なので −9。(−3)² との違いに注意！"},
+/* ===== 数学・文字と式 ===== */
+{s:"math",u:"文字と式",q:"a×b÷c を文字式のきまりにしたがって表すと？",c:["ab/c","abc","a+b−c","c/ab"],e:"×は省略し、÷は分数の形で表します。"},
+{s:"math",u:"文字と式",q:"x+x+x を簡単にすると？",c:["3x","x³","3+x","x/3"],e:"同じ文字の和は係数をまとめます。x が3つで 3x。x³（かけ算）と混同しないように。"},
+{s:"math",u:"文字と式",q:"3(2x−4) を計算すると？",c:["6x−12","6x−4","5x−7","6x+12"],e:"分配法則。3×2x=6x、3×(−4)=−12。"},
+{s:"math",u:"文字と式",q:"5a−2a を計算すると？",c:["3a","3","7a","3a²"],e:"同じ文字の項は係数どうしを計算。5−2=3 なので 3a。"},
+{s:"math",u:"文字と式",q:"1個x円のりんごを3個買い、100円の箱に入れてもらった代金は？",c:["3x+100（円）","3x−100（円）","x+300（円）","103x（円）"],e:"りんご3個で 3x 円。それに箱の100円を足します。"},
+{s:"math",u:"文字と式",q:"x=−2 のとき、3x+5 の値は？",c:["−1","11","1","−11"],e:"3×(−2)+5=−6+5=−1。負の数はかっこをつけて代入しましょう。"},
+/* ===== 数学・一次方程式 ===== */
+{s:"math",u:"一次方程式",q:"方程式 x+7=12 の解は？",c:["x=5","x=19","x=−5","x=7"],e:"7を右辺に移項して x=12−7=5。"},
+{s:"math",u:"一次方程式",q:"方程式 3x=−15 の解は？",c:["x=−5","x=5","x=−45","x=−12"],e:"両辺を3でわって x=−5。"},
+{s:"math",u:"一次方程式",q:"方程式 2x−3=7 の解は？",c:["x=5","x=2","x=−5","x=10"],e:"−3を移項して 2x=10、両辺を2でわって x=5。"},
+{s:"math",u:"一次方程式",q:"方程式 5x+2=3x+10 の解は？",c:["x=4","x=6","x=−4","x=2"],e:"文字を左へ、数を右へ移項。2x=8 なので x=4。"},
+{s:"math",u:"一次方程式",q:"方程式 x/3=6 の解は？",c:["x=18","x=2","x=3","x=9"],e:"両辺に3をかけて x=18。"},
+{s:"math",u:"一次方程式",q:"比例式 x:6=2:3 の x の値は？",c:["x=4","x=9","x=3","x=12"],e:"a:b=c:d のとき ad=bc。3x=12 なので x=4。"},
+/* ===== 数学・比例と反比例 ===== */
+{s:"math",u:"比例と反比例",q:"y=3x で x=4 のとき y の値は？",c:["12","7","1","81"],e:"x の値を代入するだけ。3×4=12。"},
+{s:"math",u:"比例と反比例",q:"y=−2x の比例定数は？",c:["−2","2","x","−2x"],e:"y=ax の a が比例定数です。"},
+{s:"math",u:"比例と反比例",q:"反比例 y=12/x で x=3 のとき y の値は？",c:["4","36","9","1/4"],e:"12÷3=4。反比例では x×y が一定（ここでは12）です。"},
+{s:"math",u:"比例と反比例",q:"比例 y=ax のグラフの特徴は？",c:["原点を通る直線","原点を通らない直線","双曲線","放物線"],e:"比例のグラフは必ず原点(0,0)を通る直線になります。"},
+{s:"math",u:"比例と反比例",q:"y が x に反比例し、x=2 のとき y=9。式は？",c:["y=18/x","y=9/x","y=4.5x","y=11−x"],e:"y=a/x に代入すると a=xy=2×9=18。"},
+{s:"math",u:"比例と反比例",q:"点 (3, −2) は第何象限にある？",c:["第四象限","第一象限","第二象限","第三象限"],e:"x が正、y が負の領域は第四象限（右下）です。"},
+/* ===== 数学・平面図形 ===== */
+{s:"math",u:"平面図形",q:"半径6cmの円の面積は？（円周率はπ）",c:["36π cm²","12π cm²","6π cm²","18π cm²"],e:"円の面積＝πr²。π×6²=36π。"},
+{s:"math",u:"平面図形",q:"半径3cmの円の周の長さは？",c:["6π cm","9π cm","3π cm","12π cm"],e:"円周＝2πr。2×π×3=6π。"},
+{s:"math",u:"平面図形",q:"半径6cm・中心角60°のおうぎ形の弧の長さは？",c:["2π cm","6π cm","π cm","12π cm"],e:"円周12πの 60/360＝1/6 なので 2π cm。"},
+{s:"math",u:"平面図形",q:"線分ABの垂直二等分線上の点の性質は？",c:["2点A, Bから等しい距離にある","線分ABと平行","つねにABより長い","Aだけに近い"],e:"垂直二等分線＝2点から等距離にある点の集まり。作図問題の考え方の基本です。"},
+{s:"math",u:"平面図形",q:"図形を180°回転させる移動を何という？",c:["点対称移動","平行移動","対称移動（線対称）","拡大"],e:"回転移動のうち180°回転を点対称移動といいます。"},
+{s:"math",u:"平面図形",q:"角の二等分線上の点の性質は？",c:["角の2辺から等しい距離にある","頂点から最も遠い","2辺と垂直に交わる","円の中心になる"],e:"角の二等分線＝2辺から等距離にある点の集まりです。"},
+/* ===== 数学・空間図形 ===== */
+{s:"math",u:"空間図形",q:"底面の半径3cm・高さ5cmの円柱の体積は？",c:["45π cm³","15π cm³","30π cm³","9π cm³"],e:"円柱の体積＝底面積×高さ＝9π×5=45π。"},
+{s:"math",u:"空間図形",q:"角錐・円錐の体積は、底面と高さが同じ角柱・円柱の何倍？",c:["1/3倍","1/2倍","2/3倍","1/4倍"],e:"錐（すい）の体積は柱の 1/3。V＝(1/3)×底面積×高さ。"},
+{s:"math",u:"空間図形",q:"正多面体は全部で何種類ある？",c:["5種類","4種類","6種類","8種類"],e:"正四面体・正六面体・正八面体・正十二面体・正二十面体の5種類だけです。"},
+{s:"math",u:"空間図形",q:"円錐の展開図で、側面はどんな形？",c:["おうぎ形","円","三角形","長方形"],e:"円錐の側面を開くとおうぎ形になります（円柱なら長方形）。"},
+{s:"math",u:"空間図形",q:"半径 r の球の表面積は？",c:["4πr²","πr²","2πr²","(4/3)πr³"],e:"球の表面積＝4πr²。(4/3)πr³ は体積の公式です。"},
+{s:"math",u:"空間図形",q:"空間内で、交わらず平行でもない2直線の関係を何という？",c:["ねじれの位置","垂直","一致","接する"],e:"同じ平面上にない2直線は「ねじれの位置」にあるといいます。"},
+/* ===== 数学・データの活用 ===== */
+{s:"math",u:"データの活用",q:"データ 3, 5, 7, 9, 11 の中央値は？",c:["7","5","9","35"],e:"小さい順に並べたときの真ん中の値。5個なら3番目の7です。"},
+{s:"math",u:"データの活用",q:"度数分布表で、階級の真ん中の値を何という？",c:["階級値","度数","相対度数","中央値"],e:"例：10〜20の階級なら階級値は15です。"},
+{s:"math",u:"データの活用",q:"相対度数の求め方は？",c:["その階級の度数 ÷ 度数の合計","度数の合計 ÷ その階級の度数","最大値 − 最小値","度数 × 階級値"],e:"全体に対する割合を表すのが相対度数です。"},
+{s:"math",u:"データの活用",q:"データの範囲（レンジ）の求め方は？",c:["最大値 − 最小値","最大値 + 最小値","平均値 − 中央値","度数の合計"],e:"データの散らばりの大きさを表す最も簡単な指標です。"},
+{s:"math",u:"データの活用",q:"データの中で最も多く出てくる値を何という？",c:["最頻値（モード）","中央値（メジアン）","平均値","階級値"],e:"最頻値＝モード。度数が最大の値です。"},
+/* ===== 英語・be動詞 ===== */
+{s:"eng",u:"be動詞",q:"I ___ a student.",c:["am","is","are","be"],e:"主語が I のとき be動詞は am。"},
+{s:"eng",u:"be動詞",q:"You ___ kind.",c:["are","am","is","be"],e:"主語が you のとき be動詞は are。"},
+{s:"eng",u:"be動詞",q:"This ___ my book.",c:["is","am","are","do"],e:"this / he / she / it など単数（I, you以外）は is。"},
+{s:"eng",u:"be動詞",q:"___ you from Osaka?",c:["Are","Is","Am","Do"],e:"be動詞の疑問文は be動詞を文の先頭に。You are → Are you?"},
+{s:"eng",u:"be動詞",q:"「is not」の短縮形は？",c:["isn't","aren't","don't","not's"],e:"is not → isn't。are not → aren't も一緒に覚えましょう。"},
+{s:"eng",u:"be動詞",q:"Ken and I ___ good friends.",c:["are","is","am","be"],e:"Ken and I ＝ we（複数）なので are。"},
+/* ===== 英語・一般動詞（基本） ===== */
+{s:"eng",u:"一般動詞（基本）",q:"I ___ soccer every day.",c:["play","plays","playing","am play"],e:"主語が I なので動詞はそのままの形（原形）。"},
+{s:"eng",u:"一般動詞（基本）",q:"___ you like dogs? — Yes, I do.",c:["Do","Are","Does","Is"],e:"一般動詞（like）の疑問文は Do で始めます。be動詞と混ぜないのがコツ。"},
+{s:"eng",u:"一般動詞（基本）",q:"I ___ not play the piano.",c:["do","am","does","is"],e:"一般動詞の否定文は do not（don't）＋動詞の原形。"},
+{s:"eng",u:"一般動詞（基本）",q:"「私は毎日英語を勉強します」＝ I ___ English every day.",c:["study","am study","studies","studying"],e:"主語が I の一般動詞はそのまま（原形）。be動詞はいりません。"},
+/* ===== 英語・三単現（3人称単数） ===== */
+{s:"eng",u:"三単現（3人称単数）",q:"She ___ TV after dinner.",c:["watches","watch","watching","is watch"],e:"三人称単数・現在なので watches。語尾が ch の動詞は es をつけます。"},
+{s:"eng",u:"三単現（3人称単数）",q:"___ he like music?",c:["Does","Do","Is","Are"],e:"一般動詞の疑問文で主語が三人称単数なら Does。動詞は原形 like に戻します。"},
+{s:"eng",u:"三単現（3人称単数）",q:"My brother ___ a dog.",c:["has","have","haves","is"],e:"have の三単現は has。特別な変化なので要注意！"},
+{s:"eng",u:"三単現（3人称単数）",q:"He doesn't ___ natto.",c:["eat","eats","eating","ate"],e:"doesn't（does not）の後ろの動詞は必ず原形です。"},
+{s:"eng",u:"三単現（3人称単数）",q:"study の三単現（三人称単数・現在形）は？",c:["studies","studys","studyes","studied"],e:"〈子音字＋y〉で終わる動詞は y を i に変えて es。"},
+/* ===== 英語・疑問詞 ===== */
+{s:"eng",u:"疑問詞",q:"___ is that boy? — He's my brother.",c:["Who","What","Where","When"],e:"「だれ？」と人をたずねるときは Who。"},
+{s:"eng",u:"疑問詞",q:"___ do you get up? — At six.",c:["What time","Where","Who","Whose"],e:"「何時に？」は What time。At six（6時に）と時刻を答えています。"},
+{s:"eng",u:"疑問詞",q:"___ is your bag? — It's under the desk.",c:["Where","When","Who","Why"],e:"場所を答えているので「どこ？」＝ Where。"},
+{s:"eng",u:"疑問詞",q:"___ do you like better, summer or winter?",c:["Which","What","Who","How"],e:"選択肢の中から「どちら？」と選ばせるときは Which。"},
+{s:"eng",u:"疑問詞",q:"___ old is your school?",c:["How","What","When","Which"],e:"How old（どのくらい古い＝築何年/何歳）。How many, How much も同じ仲間。"},
+{s:"eng",u:"疑問詞",q:"___ bag is this? — It's Yumi's.",c:["Whose","Who","Which","What"],e:"「だれの〜？」は Whose。Yumi's（ユミのもの）と答えています。"},
+/* ===== 英語・命令文とcan ===== */
+{s:"eng",u:"命令文とcan",q:"___ quiet in the library.",c:["Be","Do","Are","Being"],e:"be動詞の命令文は Be で始めます。"},
+{s:"eng",u:"命令文とcan",q:"___ run in the classroom.（走ってはいけません）",c:["Don't","Not","Doesn't","Can't"],e:"禁止の命令文は Don't ＋動詞の原形。"},
+{s:"eng",u:"命令文とcan",q:"She can ___ very fast.",c:["run","runs","running","ran"],e:"can などの助動詞の後ろは動詞の原形。主語が she でも runs にはなりません。"},
+{s:"eng",u:"命令文とcan",q:"Can I use your pen? の意味は？",c:["あなたのペンを使ってもいいですか","あなたのペンを使ってくれますか","私のペンを使いますか","ペンを使えません"],e:"Can I 〜? は「〜してもいいですか」と許可を求める表現です。"},
+{s:"eng",u:"命令文とcan",q:"Let's play tennis. — Yes, ___.",c:["let's","we do","I can","please"],e:"Let's 〜. への応じ方は Yes, let's. / No, let's not."},
+{s:"eng",u:"命令文とcan",q:"___ you help me?（手伝ってくれますか）",c:["Can","Are","Am","Let's"],e:"Can you 〜? は「〜してくれますか」と依頼する表現です。"},
+/* ===== 英語・現在進行形 ===== */
+{s:"eng",u:"現在進行形",q:"I ___ watching TV now.",c:["am","is","are","do"],e:"現在進行形は〈be動詞＋動詞のing形〉。主語 I なので am。"},
+{s:"eng",u:"現在進行形",q:"run の ing形は？",c:["running","runing","runs","ran"],e:"〈短母音＋子音字〉で終わる動詞は最後の文字を重ねて ing。"},
+{s:"eng",u:"現在進行形",q:"He is ___ lunch now.",c:["eating","eat","eats","ate"],e:"be動詞の後ろは動詞のing形。「今食べているところ」を表します。"},
+{s:"eng",u:"現在進行形",q:"___ she studying now?",c:["Is","Does","Do","Are"],e:"進行形の疑問文は be動詞を先頭に。She is studying → Is she studying?"},
+{s:"eng",u:"現在進行形",q:"write の ing形は？",c:["writing","writeing","writting","wrote"],e:"e で終わる動詞は e をとって ing。"},
+{s:"eng",u:"現在進行形",q:"現在進行形の形として正しいのは？",c:["be動詞＋動詞のing形","do＋動詞の原形","be動詞＋動詞の原形","have＋過去分詞"],e:"「今〜しているところ」＝〈am/is/are＋〜ing〉です。"},
+/* ===== 英語・過去形 ===== */
+{s:"eng",u:"過去形",q:"I ___ tennis yesterday.",c:["played","play","plays","playing"],e:"yesterday（昨日）があるので過去形 played。"},
+{s:"eng",u:"過去形",q:"go の過去形は？",c:["went","goed","gone","goes"],e:"go は不規則動詞。go−went−gone。"},
+{s:"eng",u:"過去形",q:"___ you busy yesterday?",c:["Were","Was","Did","Are"],e:"be動詞の過去の疑問文。主語 you なので were。"},
+{s:"eng",u:"過去形",q:"Did you ___ the movie?",c:["see","saw","seen","sees"],e:"Did を使った疑問文では動詞は原形に戻します。"},
+{s:"eng",u:"過去形",q:"study の過去形は？",c:["studied","studyed","studed","studies"],e:"〈子音字＋y〉は y を i に変えて ed。"},
+{s:"eng",u:"過去形",q:"She ___ to Kyoto last month.",c:["went","goes","go","going"],e:"last month（先月）があるので過去形。go の過去形は went。"},
+/* ===== 英語・名詞と代名詞 ===== */
+{s:"eng",u:"名詞と代名詞",q:"box の複数形は？",c:["boxes","boxs","boxies","box"],e:"s, x, ch, sh で終わる名詞は es をつけます。"},
+{s:"eng",u:"名詞と代名詞",q:"child の複数形は？",c:["children","childs","childes","childrens"],e:"child は不規則変化。man→men, woman→women も一緒に。"},
+{s:"eng",u:"名詞と代名詞",q:"「彼女を」を表す語は？",c:["her","she","hers","he"],e:"she（〜は）− her（〜の）− her（〜を）− hers（〜のもの）。目的格は her。"},
+{s:"eng",u:"名詞と代名詞",q:"「彼らのもの」を表す語は？",c:["theirs","their","them","they"],e:"they − their − them − theirs。「〜のもの」は theirs。"},
+{s:"eng",u:"名詞と代名詞",q:"This is ___ pen.（私のペン）",c:["my","I","me","mine"],e:"名詞の前につく「〜の」は所有格 my。"},
+{s:"eng",u:"名詞と代名詞",q:"I know ___.（私は彼を知っている）",c:["him","he","his","her"],e:"動詞の目的語になる「彼を」は目的格 him。"},
+/* ===== 国語・漢字の読み ===== */
+{s:"jpn",u:"漢字の読み",q:"「促す」の読み方は？",c:["うながす","そくす","ほどこす","せかす"],e:"促す＝行動をするようにしむけること。「促進」の促です。"},
+{s:"jpn",u:"漢字の読み",q:"「穏やか」の読み方は？",c:["おだやか","ゆるやか","さわやか","しなやか"],e:"穏やか＝落ち着いて静かな様子。「平穏」の穏です。"},
+{s:"jpn",u:"漢字の読み",q:"「著しい」の読み方は？",c:["いちじるしい","あたらしい","おびただしい","めざましい"],e:"著しい＝はっきりわかるほど程度が大きい。「顕著」の著です。"},
+{s:"jpn",u:"漢字の読み",q:"「頻繁」の読み方は？",c:["ひんぱん","びんかん","ひんど","はんざつ"],e:"頻繁＝しきりに行われること。"},
+{s:"jpn",u:"漢字の読み",q:"「委ねる」の読み方は？",c:["ゆだねる","たずねる","かさねる","つらねる"],e:"委ねる＝すべてまかせること。「委任」の委です。"},
+{s:"jpn",u:"漢字の読み",q:"「滞る」の読み方は？",c:["とどこおる","たまわる","こだわる","いきどおる"],e:"滞る＝物事が順調に進まないこと。「渋滞」の滞です。"},
+/* ===== 国語・漢字の書き ===== */
+{s:"jpn",u:"漢字の書き",q:"「セイミツな機械」のセイミツは？",c:["精密","清密","性密","静密"],e:"精密＝細かいところまで正確なこと。「精」は精度・精巧の精。"},
+{s:"jpn",u:"漢字の書き",q:"「病気がカイフクする」のカイフクは？",c:["回復","解復","改復","開復"],e:"元の状態に戻るのは「回復」。「快復」は病気が治る場合に限る表記です。"},
+{s:"jpn",u:"漢字の書き",q:"「学級会のギダイ」のギダイは？",c:["議題","義題","疑題","技題"],e:"議題＝会議で話し合う事柄。「会議」「議論」の議です。"},
+{s:"jpn",u:"漢字の書き",q:"「コウリツよく勉強する」のコウリツは？",c:["効率","功率","公率","高率"],e:"効率＝使った労力に対する成果の割合。「効果」の効です。"},
+{s:"jpn",u:"漢字の書き",q:"「セキニンを果たす」のセキニンは？",c:["責任","積任","績任","責認"],e:"責任＝引き受けてしなければならない務め。"},
+/* ===== 国語・文法 ===== */
+{s:"jpn",u:"文法",q:"「私は毎朝パンを食べる」を文節に分けると、いくつ？",c:["4つ","3つ","5つ","6つ"],e:"私は／毎朝／パンを／食べる。「ネ」を入れて自然に切れる単位が文節です。"},
+{s:"jpn",u:"文法",q:"「美しい」の品詞は？",c:["形容詞","形容動詞","副詞","動詞"],e:"言い切りが「〜い」で終わり、様子を表すのが形容詞。"},
+{s:"jpn",u:"文法",q:"「静かだ」の品詞は？",c:["形容動詞","形容詞","副詞","名詞"],e:"言い切りが「〜だ」で終わり、様子を表すのが形容動詞。"},
+{s:"jpn",u:"文法",q:"「ゆっくり」の品詞は？",c:["副詞","形容詞","接続詞","連体詞"],e:"主に用言（動詞など）を修飾し、活用しないのが副詞。「ゆっくり歩く」。"},
+{s:"jpn",u:"文法",q:"「しかし」の品詞は？",c:["接続詞","副詞","助詞","感動詞"],e:"文と文をつなぐ働きをするのが接続詞です。"},
+{s:"jpn",u:"文法",q:"文の中で「どうする・どんなだ・何だ」にあたる部分を何という？",c:["述語","主語","修飾語","接続語"],e:"「何が」＝主語、「どうする」＝述語。文の骨組みになる成分です。"},
+/* ===== 国語・語彙とことわざ ===== */
+{s:"jpn",u:"語彙とことわざ",q:"「馬が合う」の意味は？",c:["気が合う","競争になる","話がかみ合わない","動きが速い"],e:"乗馬で馬と息が合うことから、「気が合う」という意味になりました。"},
+{s:"jpn",u:"語彙とことわざ",q:"「油を売る」の意味は？",c:["むだ話をして仕事を怠ける","商売がうまい","お世辞を言う","景気よくふるまう"],e:"江戸時代の油売りが世間話をしながら売ったことが由来です。"},
+{s:"jpn",u:"語彙とことわざ",q:"「猫の額」の意味は？",c:["とても狭いこと","とてもかわいいこと","気まぐれなこと","とても広いこと"],e:"猫の額のように狭い、という意味。「猫の額ほどの庭」のように使います。"},
+{s:"jpn",u:"語彙とことわざ",q:"「抽象」の対義語は？",c:["具体","現実","想像","単純"],e:"抽象⇔具体。セットで覚えるのが対義語のコツです。"},
+{s:"jpn",u:"語彙とことわざ",q:"「二の足を踏む」の意味は？",c:["ためらう","急いで進む","同じ失敗をくり返す","じゃまをする"],e:"一歩目は出たのに二歩目をためらって足踏みする様子からできた言葉です。"},
+/* ===== 理科・植物の世界 ===== */
+{s:"sci",u:"植物の世界",q:"光合成が行われる細胞内のつくりは？",c:["葉緑体","核","液胞","細胞膜"],e:"緑色の粒である葉緑体で、光を使ってデンプンなどをつくります。"},
+{s:"sci",u:"植物の世界",q:"光合成でつくられるものの組み合わせは？",c:["デンプンと酸素","二酸化炭素と水","酸素と窒素","デンプンと二酸化炭素"],e:"水と二酸化炭素を材料に、光のエネルギーでデンプン（栄養分）と酸素をつくります。"},
+{s:"sci",u:"植物の世界",q:"気孔から水蒸気が出ていく現象を何という？",c:["蒸散","呼吸","蒸発","光合成"],e:"蒸散によって根からの水の吸い上げがさかんになります。"},
+{s:"sci",u:"植物の世界",q:"胚珠がむき出しになっている植物のなかまは？",c:["裸子植物","被子植物","シダ植物","コケ植物"],e:"マツ・イチョウ・スギなど。被子植物は胚珠が子房の中にあります。"},
+{s:"sci",u:"植物の世界",q:"双子葉類の葉脈の特徴は？",c:["網状脈","平行脈","うずまき状","葉脈がない"],e:"双子葉類は網状脈・主根と側根、単子葉類は平行脈・ひげ根とセットで覚えましょう。"},
+{s:"sci",u:"植物の世界",q:"シダ植物やコケ植物は何でふえる？",c:["胞子","種子","球根","分裂"],e:"種子をつくらず、胞子のうでつくられた胞子でふえます。"},
+/* ===== 理科・身のまわりの物質 ===== */
+{s:"sci",u:"身のまわりの物質",q:"状態変化（固体⇔液体⇔気体）で変わらないものは？",c:["質量","体積","粒子の運動","粒子どうしの距離"],e:"体積は変わりますが、粒子の数は変わらないので質量は一定です。"},
+{s:"sci",u:"身のまわりの物質",q:"石灰水を白くにごらせる気体は？",c:["二酸化炭素","酸素","水素","アンモニア"],e:"二酸化炭素の代表的な確認方法です。"},
+{s:"sci",u:"身のまわりの物質",q:"密度の求め方は？",c:["質量 ÷ 体積","体積 ÷ 質量","質量 × 体積","質量 + 体積"],e:"密度(g/cm³)＝質量(g)÷体積(cm³)。物質を区別する手がかりになります。"},
+{s:"sci",u:"身のまわりの物質",q:"100gの水に食塩25gをとかした食塩水の質量パーセント濃度は？",c:["20%","25%","12.5%","4%"],e:"濃度＝溶質÷溶液全体×100。25÷(100+25)×100＝20%。分母は「水＋食塩」！"},
+{s:"sci",u:"身のまわりの物質",q:"砂糖や木のように、燃えると二酸化炭素が出る物質を何という？",c:["有機物","無機物","金属","純粋な物質"],e:"炭素をふくむ物質が有機物。食塩や金属は無機物です。"},
+{s:"sci",u:"身のまわりの物質",q:"水にとけにくい気体を集める方法は？",c:["水上置換法","上方置換法","下方置換法","ろ過"],e:"酸素や水素など水にとけにくい気体は、純粋に集められる水上置換法が最適です。"},
+/* ===== 理科・光・音・力 ===== */
+{s:"sci",u:"光・音・力",q:"光が反射するとき、入射角と反射角の関係は？",c:["等しい","入射角の方が大きい","反射角の方が大きい","関係はない"],e:"反射の法則：入射角＝反射角。"},
+{s:"sci",u:"光・音・力",q:"音の高さは何によって決まる？",c:["振動数","振幅","音源の大きさ","気温"],e:"振動数（1秒間に振動する回数、単位Hz）が多いほど高い音。振幅は音の大きさです。"},
+{s:"sci",u:"光・音・力",q:"空気中を伝わる音の速さはおよそ？",c:["約340m/s","約34m/s","約3400m/s","約30万km/s"],e:"約340m/s。光（約30万km/s）よりずっと遅いので、雷は光ってから音が聞こえます。"},
+{s:"sci",u:"光・音・力",q:"「ばねののびは、加えた力の大きさに比例する」という法則は？",c:["フックの法則","パスカルの原理","オームの法則","慣性の法則"],e:"力が2倍になれば、ばねののびも2倍になります。"},
+{s:"sci",u:"光・音・力",q:"圧力の単位は？",c:["Pa（パスカル）","N（ニュートン）","J（ジュール）","W（ワット）"],e:"圧力(Pa)＝力(N)÷面積(m²)。1Pa＝1N/m²です。"},
+{s:"sci",u:"光・音・力",q:"質量100gの物体にはたらく重力の大きさはおよそ？",c:["約1N","約100N","約10N","約0.1N"],e:"100gの物体にはたらく重力を約1Nとして計算します。"},
+/* ===== 理科・大地の変化 ===== */
+{s:"sci",u:"大地の変化",q:"マグマが冷え固まってできた岩石を何という？",c:["火成岩","堆積岩","石灰岩","チャート"],e:"火成岩は、地表近くで急に冷えた火山岩と、地下深くでゆっくり冷えた深成岩に分かれます。"},
+{s:"sci",u:"大地の変化",q:"地震のとき、初期微動を伝える波は？",c:["P波","S波","津波","表面波"],e:"P波（速い・初期微動）→S波（遅い・主要動）。この差が初期微動継続時間です。"},
+{s:"sci",u:"大地の変化",q:"日本の震度階級は何段階？",c:["10段階","7段階","9段階","12段階"],e:"0〜7ですが、5と6に強・弱があるため全部で10段階です。"},
+{s:"sci",u:"大地の変化",q:"地層が堆積した時代を知る手がかりになる化石は？",c:["示準化石","示相化石","生痕化石","琥珀"],e:"示準化石＝時代がわかる（例：三葉虫・アンモナイト）。示相化石＝環境がわかる（例：サンゴ）。"},
+{s:"sci",u:"大地の変化",q:"火山岩に見られる、大きな結晶が細かい粒に囲まれたつくりは？",c:["斑状組織","等粒状組織","層状組織","柱状節理"],e:"急に冷えた火山岩は斑状組織、ゆっくり冷えた深成岩は等粒状組織です。"},
+{s:"sci",u:"大地の変化",q:"れき・砂・泥は何によって区別される？",c:["粒の大きさ","色","かたさ","重さ"],e:"粒の直径が2mm以上＝れき、2〜0.06mm＝砂、それ以下＝泥です。"},
+/* ===== 社会・世界の姿 ===== */
+{s:"soc",u:"世界の姿",q:"世界で最も大きい大陸は？",c:["ユーラシア大陸","アフリカ大陸","北アメリカ大陸","南極大陸"],e:"ヨーロッパとアジアを合わせたユーラシア大陸が最大です。"},
+{s:"soc",u:"世界の姿",q:"世界で最も大きい海洋は？",c:["太平洋","大西洋","インド洋","北極海"],e:"三大洋は太平洋・大西洋・インド洋。太平洋が最大です。"},
+{s:"soc",u:"世界の姿",q:"経度0度の本初子午線が通る都市は？",c:["ロンドン","パリ","ニューヨーク","東京"],e:"イギリスのロンドン（旧グリニッジ天文台）を通ります。"},
+{s:"soc",u:"世界の姿",q:"日本の標準時子午線は？",c:["東経135度","東経140度","西経135度","東経90度"],e:"兵庫県明石市を通る東経135度が日本の標準時の基準です。"},
+{s:"soc",u:"世界の姿",q:"経度何度ごとに1時間の時差が生まれる？",c:["15度","10度","20度","30度"],e:"地球は24時間で360度回転するので、360÷24＝15度で1時間です。"},
+{s:"soc",u:"世界の姿",q:"緯度0度の線を何という？",c:["赤道","本初子午線","日付変更線","回帰線"],e:"赤道より北が北緯、南が南緯です。"},
+/* ===== 社会・世界の気候と暮らし ===== */
+{s:"soc",u:"世界の気候と暮らし",q:"一年中気温が高く、雨が多い気候帯は？",c:["熱帯","乾燥帯","温帯","寒帯"],e:"赤道付近に広がり、熱帯雨林が見られます。"},
+{s:"soc",u:"世界の気候と暮らし",q:"雨がとても少なく、砂漠が広がる気候帯は？",c:["乾燥帯","熱帯","冷帯（亜寒帯）","温帯"],e:"サハラ砂漠などが代表。オアシスの周りで農業が行われます。"},
+{s:"soc",u:"世界の気候と暮らし",q:"日本の大部分が属する気候帯は？",c:["温帯","熱帯","冷帯（亜寒帯）","乾燥帯"],e:"四季がはっきりしているのが温帯の特徴です（北海道は冷帯）。"},
+{s:"soc",u:"世界の気候と暮らし",q:"イスラム教の聖地は？",c:["メッカ","エルサレムのみ","バチカン","ガンジス川"],e:"サウジアラビアのメッカ。信者は1日5回メッカに向かって礼拝します。"},
+{s:"soc",u:"世界の気候と暮らし",q:"アジアの気候に大きな影響を与える、季節によって向きが変わる風は？",c:["季節風（モンスーン）","偏西風","貿易風","からっ風"],e:"夏は海から、冬は大陸から吹き、稲作がさかんな地域を生み出しました。"},
+/* ===== 社会・歴史（古代） ===== */
+{s:"soc",u:"歴史・古代",q:"縄文土器の特徴は？",c:["縄目の文様がある","薄手でかたい","ろくろで作られた","釉薬（うわぐすり）がある"],e:"厚手で黒褐色、縄目の文様が特徴。薄手でかたいのは弥生土器です。"},
+{s:"soc",u:"歴史・古代",q:"稲作が本格的に広まった時代は？",c:["弥生時代","縄文時代","旧石器時代","古墳時代"],e:"稲作とともに金属器も伝わり、むらからくにへと社会が変わりました。"},
+{s:"soc",u:"歴史・古代",q:"卑弥呼が治めた国は？",c:["邪馬台国","大和政権","高句麗","奴国"],e:"3世紀、魏に使いを送り「親魏倭王」の称号を受けました（魏志倭人伝）。"},
+{s:"soc",u:"歴史・古代",q:"聖徳太子が役人の心構えを示したものは？",c:["十七条の憲法","冠位十二階","大宝律令","御成敗式目"],e:"「和をもって貴しとなす」で始まります。冠位十二階は人材登用の制度です。"},
+{s:"soc",u:"歴史・古代",q:"645年、中大兄皇子と中臣鎌足が始めた政治改革は？",c:["大化の改新","大宝律令の制定","墾田永年私財法","班田収授法"],e:"蘇我氏をたおし、天皇中心の国づくりを目指した改革です。"},
+{s:"soc",u:"歴史・古代",q:"東大寺の大仏をつくらせた天皇は？",c:["聖武天皇","桓武天皇","天智天皇","推古天皇"],e:"仏教の力で国を守ろうと、国分寺や大仏をつくらせました。"},
+/* ===== 社会・歴史（平安〜鎌倉） ===== */
+{s:"soc",u:"歴史・平安〜鎌倉",q:"794年、平安京に都を移した天皇は？",c:["桓武天皇","聖武天皇","天武天皇","後醍醐天皇"],e:"「なくよ（794）うぐいす平安京」。政治の立て直しが目的でした。"},
+{s:"soc",u:"歴史・平安〜鎌倉",q:"摂関政治の全盛期を築いた人物は？",c:["藤原道長","藤原鎌足","菅原道真","平清盛"],e:"「この世をば わが世とぞ思ふ 望月の…」の歌で知られます。"},
+{s:"soc",u:"歴史・平安〜鎌倉",q:"武士として初めて太政大臣になった人物は？",c:["平清盛","源頼朝","北条時宗","足利尊氏"],e:"日宋貿易にも力を入れ、平氏の全盛期を築きました。"},
+{s:"soc",u:"歴史・平安〜鎌倉",q:"鎌倉幕府を開いた人物は？",c:["源頼朝","源義経","平清盛","北条政子"],e:"1192年に征夷大将軍に任命され、武家政権を確立しました。"},
+{s:"soc",u:"歴史・平安〜鎌倉",q:"元寇（元の襲来）のときの鎌倉幕府の執権は？",c:["北条時宗","北条政子","北条泰時","源実朝"],e:"文永の役・弘安の役の2度の襲来を退けました。"},
+{s:"soc",u:"歴史・平安〜鎌倉",q:"将軍が御家人に土地を保護・恩賞として与え、御家人が戦いで奉仕する関係を何という？",c:["御恩と奉公","参勤交代","荘園制","朝貢"],e:"土地を仲立ちにした主従関係が鎌倉幕府を支えました。"},
+];
+
+/* ============ 学習進度（中1・前期後期制の標準カリキュラム連動） ============ */
+/* 値＝その単元を習い始めるおおよその学年月（4月=1 … 3月=12）。
+   標準的な検定教科書の年間指導計画をもとにした目安。
+   まだ習っていない単元は今日のクエストに出ず、特訓で「先取り」だけできる。 */
+const CURRICULUM = {
+  "math|正負の数":1, "math|文字と式":3, "math|一次方程式":6, "math|比例と反比例":7,
+  "math|平面図形":9, "math|空間図形":10, "math|データの活用":11,
+  "eng|be動詞":1, "eng|一般動詞（基本）":2, "eng|疑問詞":3, "eng|命令文とcan":4,
+  "eng|名詞と代名詞":6, "eng|三単現（3人称単数）":7, "eng|現在進行形":9, "eng|過去形":10,
+  "jpn|漢字の読み":1, "jpn|漢字の書き":1, "jpn|文法":2, "jpn|語彙とことわざ":1,
+  "sci|植物の世界":1, "sci|身のまわりの物質":6, "sci|光・音・力":9, "sci|大地の変化":11,
+  "soc|世界の姿":1, "soc|世界の気候と暮らし":3, "soc|歴史・古代":6, "soc|歴史・平安〜鎌倉":9,
+};
+function schoolMonth(){ return ((new Date().getMonth()+1) - 4 + 12) % 12 + 1; } // 4月=1
+function termName(){ return schoolMonth() <= 6 ? "前期" : "後期"; }
+function monthLabel(sm){ return ((sm+2)%12+1) + "月"; }
+function unitUnlocked(s,u){ const sm = CURRICULUM[s+"|"+u]; return sm===undefined || sm <= schoolMonth(); }
+
+/* ============ 学習エンジン（間隔反復・Leitner+SM-2簡易版） ============ */
+const DAY = 24*60*60*1000;
+const INTERVALS = [0, 1, 3, 7, 14, 30]; // stage→次に出すまでの日数
+const MASTER_STAGE = 3;                 // 7日以上あけて思い出せた＝マスター扱い
+const QUEST_SIZE = 10, PRACTICE_SIZE = 8;
+
+const KEY = "manabiQuestV1";
+let S = load();
+function load(){
+  try{
+    const d = JSON.parse(localStorage.getItem(KEY));
+    if(d && d.items) return d;
+  }catch(e){}
+  return {xp:0, answered:0, correct:0, reviewDone:0, sessions:0,
+          streak:0, lastDay:null, badges:[], perfectRuns:0, items:{}, sound:true};
+}
+function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
+function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+
+function itemState(id){ return S.items[id]; }
+function dueIds(){
+  const now = Date.now();
+  return Object.keys(S.items).filter(id => S.items[id].due <= now).map(Number);
+}
+function newUnlockedIds(){
+  // 新しい問題は「もう習った単元」だけから出す（予約済みの復習は単元にかかわらず出る）
+  return BANK.map((_,i)=>i).filter(i => !S.items[i] && unitUnlocked(BANK[i].s, BANK[i].u));
+}
+function scheduleAnswer(id, firstTryCorrect, retried){
+  let st = S.items[id];
+  if(!st){ st = S.items[id] = {stage:0, due:0, seen:0, right:0, wrong:0}; }
+  st.seen++;
+  if(firstTryCorrect){
+    st.right++;
+    st.stage = Math.min(st.stage+1, INTERVALS.length-1);
+  }else if(retried){ // セッション内で間違えたあと正解
+    st.right++;
+    st.stage = 1;
+  }else{ // 間違い
+    st.wrong++;
+    st.stage = 0;
+  }
+  st.due = Date.now() + INTERVALS[st.stage]*DAY;
+  save();
+}
+
+/* レベル: 必要XPが少しずつ増える */
+const TITLES = ["見習い","冒険者","探求者","戦士","騎士","賢者","大賢者","勇者","覇者","伝説の勇者"];
+function levelInfo(xp){
+  let lvl=1, need=100, base=0;
+  while(xp >= base+need){ base+=need; lvl++; need=100+ (lvl-1)*40; }
+  return {lvl, cur:xp-base, need, title:TITLES[Math.min(TITLES.length-1, Math.floor((lvl-1)/3))]};
+}
+
+/* バッジ */
+const BADGES = [
+  {id:"first",   emoji:"🎯", name:"はじめの一歩",   desc:"はじめてのクエストをクリア",           check:()=>S.sessions>=1},
+  {id:"streak4", emoji:"🔥", name:"三日坊主 卒業",  desc:"4日連続で学習",                        check:()=>S.streak>=4},
+  {id:"streak7", emoji:"🏅", name:"週間ヒーロー",   desc:"7日連続で学習",                        check:()=>S.streak>=7},
+  {id:"c100",    emoji:"⚔️", name:"百戦錬磨",       desc:"のべ100問に正解",                      check:()=>S.correct>=100},
+  {id:"all5",    emoji:"🌈", name:"五教科の旅人",   desc:"5教科すべてで正解する",                check:()=>Object.keys(SUBJECTS).every(s=>BANK.some((q,i)=>q.s===s&&S.items[i]&&S.items[i].right>0))},
+  {id:"perfect", emoji:"💎", name:"パーフェクト",   desc:"クエストを全問一発正解でクリア",       check:()=>S.perfectRuns>=1},
+  {id:"rev50",   emoji:"🔁", name:"復習マスター",   desc:"復習問題を50問クリア",                 check:()=>S.reviewDone>=50},
+  {id:"m30",     emoji:"🧠", name:"記憶の達人",     desc:"30問をマスター（7日以上あけて正解）",   check:()=>Object.values(S.items).filter(st=>st.stage>=MASTER_STAGE).length>=30},
+];
+
+/* ============ 効果音（WebAudio） ============ */
+let audioCtx = null;
+function beep(freqs, dur){
+  if(!S.sound) return;
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    freqs.forEach((f,i)=>{
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type="sine"; o.frequency.value=f;
+      g.gain.setValueAtTime(0.12, audioCtx.currentTime + i*dur);
+      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (i+1)*dur);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(audioCtx.currentTime + i*dur); o.stop(audioCtx.currentTime + (i+1)*dur);
+    });
+  }catch(e){}
+}
+const soundOK = ()=>beep([660,880],0.12);
+const soundNG = ()=>beep([220,180],0.18);
+const soundLv = ()=>beep([523,659,784,1047],0.13);
+
+/* ============ ユーティリティ ============ */
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+/* 同じ教科が連続しないように並べ替え（インターリービング） */
+function interleave(ids){
+  const pool = shuffle(ids), out = [];
+  while(pool.length){
+    let idx = pool.findIndex(id => !out.length || BANK[id].s !== BANK[out[out.length-1]].s);
+    if(idx === -1) idx = 0;
+    out.push(pool.splice(idx,1)[0]);
+  }
+  return out;
+}
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+/* ============ 画面 ============ */
+const app = document.getElementById("app");
+let currentTab = "home";
+
+function nav(tab){
+  currentTab = tab;
+  document.getElementById("nav").innerHTML = [
+    ["home","🏠","ホーム"],["train","💪","特訓"],["badges","🏆","バッジ"],["science","🧠","しくみ"]
+  ].map(([t,ico,label]) =>
+    `<button class="${t===tab?"active":""}" onclick="go('${t}')"><span class="ico">${ico}</span>${label}</button>`
+  ).join("");
+}
+function go(tab){
+  nav(tab);
+  if(tab==="home") renderHome();
+  else if(tab==="train") renderTrain();
+  else if(tab==="badges") renderBadges();
+  else if(tab==="science") renderScience();
+}
+window.go = go;
+
+/* ---- ホーム ---- */
+function renderHome(){
+  const lv = levelInfo(S.xp);
+  const due = dueIds().length, fresh = newUnlockedIds().length;
+  const mastered = Object.values(S.items).filter(st=>st.stage>=MASTER_STAGE).length;
+  const acc = S.answered ? Math.round(S.correct/S.answered*100) : 0;
+
+  const masteryRows = Object.entries(SUBJECTS).map(([key,sub])=>{
+    const ids = BANK.map((q,i)=>[q,i]).filter(([q])=>q.s===key);
+    const m = ids.filter(([q,i])=>S.items[i] && S.items[i].stage>=MASTER_STAGE).length;
+    const pct = Math.round(m/ids.length*100);
+    return `<div class="row" style="margin-bottom:8px">
+      <span style="width:64px;font-size:13px">${sub.emoji} ${sub.name}</span>
+      <div class="masterybar grow"><div style="width:${pct}%;background:${sub.color}"></div></div>
+      <span class="sub" style="width:56px;text-align:right">${m}/${ids.length}</span>
+    </div>`;
+  }).join("");
+
+  app.innerHTML = `
+    <div class="row" style="margin-bottom:12px">
+      <h1>⚔️ まなびクエスト <span class="pill">中1</span></h1>
+      <div class="grow"></div>
+      <button class="btn-ghost" onclick="toggleSound()">${S.sound?"🔊":"🔇"}</button>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <div class="streak-flame">${S.streak>0?"🔥":"🕯️"}</div>
+        <div class="grow">
+          <div class="big">${S.streak}日連続</div>
+          <div class="sub">${S.lastDay===todayStr()?"今日の学習 済み！":"今日もコツコツ、記憶は毎日の復習で定着します"}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="margin-bottom:6px">
+        <span class="pill" style="background:linear-gradient(135deg,#5b7cfa,#8a5bfa)">Lv.${lv.lvl} ${lv.title}</span>
+        <div class="grow"></div>
+        <span class="sub">${lv.cur} / ${lv.need} XP</span>
+      </div>
+      <div class="xpbar"><div style="width:${Math.round(lv.cur/lv.need*100)}%"></div></div>
+      <div class="stat3">
+        <div><div class="v">${due}</div><div class="k">今日の復習</div></div>
+        <div><div class="v">${mastered}</div><div class="k">マスター済み</div></div>
+        <div><div class="v">${acc}%</div><div class="k">正答率</div></div>
+      </div>
+      <button class="btn-main" onclick="startQuest()">▶ 今日のクエストに出発（${QUEST_SIZE}問）</button>
+      <div class="sub center" style="margin-top:8px">復習${Math.min(due,QUEST_SIZE)}問 ＋ 新しい問題${Math.max(0,Math.min(QUEST_SIZE-due, fresh))}問を教科ミックスで出題<br>📚 中1・${termName()}（〜${monthLabel(schoolMonth())}）に習う単元から。未習単元は「特訓」で先取りできます</div>
+    </div>
+
+    <div class="card">
+      <h2>📊 教科べつマスター度</h2>
+      ${masteryRows}
+      <div class="sub" style="margin-top:6px">「マスター」＝7日以上間隔をあけても思い出せた問題。全${BANK.length}問収録。</div>
+    </div>`;
+}
+window.toggleSound = ()=>{ S.sound=!S.sound; save(); renderHome(); };
+
+/* ---- 特訓（単元べつ） ---- */
+function renderTrain(){
+  const units = {};
+  BANK.forEach((q,i)=>{
+    const k = q.s+"|"+q.u;
+    (units[k] = units[k] || {s:q.s,u:q.u,ids:[]}).ids.push(i);
+  });
+  const bySub = {};
+  Object.values(units).forEach(u=>{ (bySub[u.s]=bySub[u.s]||[]).push(u); });
+
+  app.innerHTML = `<h1 style="margin-bottom:12px">💪 単元べつ特訓</h1>
+    <div class="sub" style="margin-bottom:12px">苦手な単元をねらいうち。ここでの成績も復習スケジュールに反映されます。<br>🔒はまだ習っていない単元（タップで先取り学習もOK）。</div>` +
+    Object.entries(SUBJECTS).map(([key,sub])=>`
+      <div class="card">
+        <h2>${sub.emoji} ${sub.name}</h2>
+        ${(bySub[key]||[]).map(u=>{
+          const m = u.ids.filter(i=>S.items[i]&&S.items[i].stage>=MASTER_STAGE).length;
+          const seen = u.ids.filter(i=>S.items[i]).length;
+          const locked = !unitUnlocked(key, u.u);
+          const chip = locked ? `🔒 ${monthLabel(CURRICULUM[key+"|"+u.u])}ごろ〜`
+                              : (seen===0 ? "未挑戦" : `⭐${m}/${u.ids.length}`);
+          return `<button class="unit-btn" style="${locked?"opacity:.55":""}" onclick="startPractice('${key}','${esc(u.u)}')">
+            <span class="grow">${esc(u.u)}</span>
+            <span class="duechip">${chip}</span>
+            <span style="color:${sub.color}">▶</span>
+          </button>`;
+        }).join("")}
+      </div>`).join("");
+}
+window.startPractice = (s,u)=>{
+  if(!unitUnlocked(s,u)){
+    const sm = CURRICULUM[s+"|"+u];
+    if(!confirm(`「${u}」は${monthLabel(sm)}ごろに習う単元です。\n先取り学習に挑戦しますか？`)) return;
+  }
+  const ids = BANK.map((q,i)=>[q,i]).filter(([q])=>q.s===s&&q.u===u).map(([,i])=>i);
+  // 未学習・低ステージ優先で出題
+  ids.sort((a,b)=>{
+    const sa=S.items[a]?S.items[a].stage:-1, sb=S.items[b]?S.items[b].stage:-1;
+    return sa-sb || Math.random()-0.5;
+  });
+  startSession(shuffle(ids.slice(0,PRACTICE_SIZE)), `${SUBJECTS[s].name}・${u} 特訓`);
+};
+
+/* ---- クエスト開始 ---- */
+window.startQuest = ()=>{
+  const due = shuffle(dueIds()).slice(0, QUEST_SIZE);
+  let queue = due.slice();
+  if(queue.length < QUEST_SIZE){
+    // 教科がかたよらないよう新規問題をラウンドロビンで補充（習った単元のみ）
+    const fresh = newUnlockedIds();
+    const bySub = {};
+    shuffle(fresh).forEach(i=>{ (bySub[BANK[i].s]=bySub[BANK[i].s]||[]).push(i); });
+    const subs = shuffle(Object.keys(bySub));
+    let k=0;
+    while(queue.length < QUEST_SIZE && subs.some(s=>bySub[s].length)){
+      const s = subs[k++ % subs.length];
+      if(bySub[s].length) queue.push(bySub[s].pop());
+    }
+  }
+  if(!queue.length){ alert("いま習っている範囲の問題はぜんぶクリア済み！\nまた明日きてね🌙（「特訓」タブから先取り学習もできます）"); return; }
+  startSession(interleave(queue), "今日のクエスト");
+};
+
+/* ---- セッション（出題エンジン） ---- */
+let sess = null;
+function startSession(ids, title){
+  if(!ids.length){ go("home"); return; }
+  sess = {
+    title, queue:ids.slice(), total:ids.length,
+    wrongOnce:new Set(), cleared:new Set(),
+    firstTryCorrect:0, gainedXp:0, reviewCount:ids.filter(i=>S.items[i]).length,
+    answeredThisQ:false,
+  };
+  nextQuestion();
+}
+function nextQuestion(){
+  if(!sess.queue.length){ finishSession(); return; }
+  const id = sess.queue[0];
+  const q = BANK[id];
+  const sub = SUBJECTS[q.s];
+  // 選択肢シャッフル（c[0]が正解）
+  const order = shuffle([0,1,2,3]);
+  sess.currentOrder = order;
+  sess.answeredThisQ = false;
+
+  const pct = Math.round(sess.cleared.size / sess.total * 100);
+  app.innerHTML = `
+    <div class="row">
+      <button class="btn-ghost" onclick="quitSession()">✕ やめる</button>
+      <div class="grow"></div>
+      <span class="pill">${esc(sess.title)}</span>
+    </div>
+    <div class="progress"><div style="width:${pct}%"></div></div>
+    <div class="sub center">${sess.cleared.size} / ${sess.total} クリア ${sess.wrongOnce.has(id)?"（リベンジ問題！）":""}</div>
+    <div class="card" style="margin-top:12px">
+      <div class="row">
+        <span class="pill" style="border-color:${sub.color};color:${sub.color}">${sub.emoji} ${sub.name}｜${esc(q.u)}</span>
+        <div class="grow"></div>
+        ${S.items[id]?'<span class="duechip">🔁 復習</span>':'<span class="duechip">✨ 新問題</span>'}
+      </div>
+      <div class="qtext">${esc(q.q)}</div>
+      <div id="choices">
+        ${order.map((ci,pos)=>`<button class="choice" id="ch${pos}" onclick="answer(${pos})">${"❶❷❸❹"[pos]} ${esc(q.c[ci])}</button>`).join("")}
+      </div>
+      <div id="fb"></div>
+    </div>
+    <div class="sub center">キーボードの 1〜4 でも答えられます</div>`;
+}
+window.quitSession = ()=>{ if(confirm("クエストを中断しますか？（ここまでの記録は保存済み）")) go("home"); };
+
+window.answer = (pos)=>{
+  if(!sess || sess.answeredThisQ) return;
+  sess.answeredThisQ = true;
+  const id = sess.queue.shift();
+  const q = BANK[id];
+  const chosen = sess.currentOrder[pos];
+  const correct = (chosen === 0);
+  const correctPos = sess.currentOrder.indexOf(0);
+  const wasWrongBefore = sess.wrongOnce.has(id);
+  const wasReview = !!S.items[id];
+
+  // ボタンの見た目更新
+  for(let p=0;p<4;p++){
+    const el = document.getElementById("ch"+p);
+    el.disabled = true;
+    if(p===correctPos) el.classList.add("correct");
+    else if(p===pos) el.classList.add("wrong");
+    else el.classList.add("dim");
+  }
+
+  let fbHtml;
+  if(correct){
+    soundOK();
+    const xp = wasWrongBefore ? 5 : 10;
+    S.xp += xp; sess.gainedXp += xp;
+    S.answered++; S.correct++;
+    if(!wasWrongBefore) sess.firstTryCorrect++;
+    if(wasReview && !wasWrongBefore) S.reviewDone++;
+    sess.cleared.add(id);
+    scheduleAnswer(id, !wasWrongBefore, wasWrongBefore);
+    const st = S.items[id];
+    const days = INTERVALS[st.stage];
+    fbHtml = `<div class="feedback ok"><b>⭕ 正解！ +${xp} XP</b><br>${esc(q.e)}<br>
+      <span class="sub">📅 次の復習：${days===0?"今日中":days+"日後"}（思い出す間隔を少しずつ広げると記憶が長持ちします）</span></div>
+      <button class="btn-main" onclick="nextQuestion()">次へ ▶</button>`;
+  }else{
+    soundNG();
+    S.answered++;
+    sess.wrongOnce.add(id);
+    sess.queue.push(id); // セッションの最後に再挑戦（正解するまで終わらない）
+    scheduleAnswer(id, false, false);
+    fbHtml = `<div class="feedback ng"><b>❌ ざんねん…正解は「${esc(q.c[0])}」</b><br>${esc(q.e)}<br>
+      <span class="sub">🔁 この問題はクエストの最後にもう一度出ます。自力で思い出せたら記憶に残ります！</span></div>
+      <button class="btn-main" onclick="nextQuestion()">次へ ▶</button>`;
+  }
+  save();
+  const fbEl = document.getElementById("fb");
+  fbEl.innerHTML = fbHtml;
+  ensureNextVisible();
+};
+
+/* 「次へ」ボタンが固定ナビの裏や画面外に隠れないよう、必要なぶんだけスクロールする。
+   scrollIntoViewは「ほぼ表示済み」と判断すると動かないため、ナビの高さを引いて自前で計算する。 */
+function ensureNextVisible(){
+  const fbEl = document.getElementById("fb");
+  const btn = fbEl && fbEl.querySelector("button");
+  if(!btn) return;
+  const navH = (document.querySelector("nav")||{}).offsetHeight || 74;
+  const gap = 16;
+  // innerHTML設定直後で同期的にレイアウトが取れるため、rAFを使わず即時にスクロールする
+  // （rAFはタブ非表示時に発火しないことがあり、smoothスクロールも一部環境で不発のため使わない）
+  const bottom = btn.getBoundingClientRect().bottom;        // ビューポート上端からの位置
+  const limit = window.innerHeight - navH - gap;            // ナビより上に確保したい下端
+  const overflow = bottom - limit;
+  if(overflow > 0) window.scrollBy(0, overflow);
+}
+
+document.addEventListener("keydown",(ev)=>{
+  if(!sess) return;
+  if(ev.key>="1" && ev.key<="4" && !sess.answeredThisQ){
+    const el = document.getElementById("ch"+(Number(ev.key)-1));
+    if(el) window.answer(Number(ev.key)-1);
+  }else if(ev.key==="Enter" && sess.answeredThisQ){
+    ev.preventDefault(); // フォーカス中の古いボタンへのclick発火を防ぐ（進行不能・二重回答対策）
+    nextQuestion();
+  }
+});
+window.nextQuestion = nextQuestion;
+
+/* ---- セッション終了 ---- */
+function finishSession(){
+  const perfect = sess.wrongOnce.size===0;
+  S.sessions++;
+  if(perfect) S.perfectRuns++;
+
+  // ストリーク更新
+  const today = todayStr();
+  if(S.lastDay !== today){
+    const y = new Date(); y.setDate(y.getDate()-1);
+    const yStr = y.getFullYear()+"-"+String(y.getMonth()+1).padStart(2,"0")+"-"+String(y.getDate()).padStart(2,"0");
+    S.streak = (S.lastDay===yStr) ? S.streak+1 : 1;
+    S.lastDay = today;
+  }
+  // バッジ判定
+  const newBadges = BADGES.filter(b=>!S.badges.includes(b.id) && b.check());
+  newBadges.forEach(b=>S.badges.push(b.id));
+  save();
+
+  const lvBefore = levelInfo(S.xp - sess.gainedXp).lvl;
+  const lv = levelInfo(S.xp);
+  const leveledUp = lv.lvl > lvBefore;
+  if(leveledUp || newBadges.length) soundLv();
+
+  const acc = Math.round(sess.firstTryCorrect/sess.total*100);
+  const dueTomorrow = Object.values(S.items).filter(st=>st.due>Date.now() && st.due<=Date.now()+DAY).length;
+
+  const doneSess = sess; sess = null;
+  app.innerHTML = `
+    <div class="card center">
+      <div class="result-emoji">${perfect?"🏆":acc>=70?"🎉":"💪"}</div>
+      <h1>${perfect?"パーフェクトクリア！":"クエストクリア！"}</h1>
+      <div class="stat3">
+        <div><div class="v" style="color:var(--gold)">+${doneSess.gainedXp}</div><div class="k">獲得XP</div></div>
+        <div><div class="v">${acc}%</div><div class="k">一発正解率</div></div>
+        <div><div class="v">🔥${S.streak}</div><div class="k">連続日数</div></div>
+      </div>
+      ${leveledUp?`<div class="feedback ok" style="margin-bottom:10px"><b>🎊 レベルアップ！ Lv.${lv.lvl} ${lv.title} になった！</b></div>`:""}
+      ${newBadges.map(b=>`<div class="feedback ok" style="margin-bottom:10px"><b>${b.emoji} バッジ獲得「${b.name}」</b><br><span class="sub">${b.desc}</span></div>`).join("")}
+      <div class="sub" style="margin:8px 0 4px">明日の復習予定：${dueTomorrow}問<br>寝ている間に記憶は整理されます。また明日つづきをやろう！</div>
+      <button class="btn-main" onclick="go('home')">ホームへもどる</button>
+      <button class="btn-sub" onclick="startQuest()">もう1クエスト挑戦する</button>
+    </div>`;
+  nav("home");
+}
+
+/* ---- バッジ ---- */
+function renderBadges(){
+  app.innerHTML = `<h1 style="margin-bottom:12px">🏆 バッジコレクション</h1>
+    <div class="card">
+    ${BADGES.map(b=>{
+      const got = S.badges.includes(b.id);
+      return `<div class="badge ${got?"":"locked"}">
+        <span class="bemoji">${b.emoji}</span>
+        <div><b>${b.name}</b><div class="sub">${b.desc}</div></div>
+        <div class="grow"></div>${got?"✅":"🔒"}
+      </div>`;
+    }).join("")}
+    </div>
+    <div class="card sub">ここまでの記録：セッション${S.sessions}回／のべ${S.answered}問に挑戦／${S.correct}問正解</div>`;
+}
+
+/* ---- 学習のしくみ ---- */
+function renderScience(){
+  app.innerHTML = `<h1 style="margin-bottom:12px">🧠 このアプリの学習のしくみ</h1>
+  <div class="card science">
+    <p>まなびクエストは「なんとなく楽しい」だけでなく、<b>記憶と学習の研究で効果が確かめられた方法</b>だけを組み合わせて作られています。</p>
+
+    <h3>1. 間隔反復（分散学習）— 忘れる直前に思い出す</h3>
+    <p>人は覚えたことを1日で急速に忘れます（エビングハウスの忘却曲線）。しかし<b>忘れかけたタイミングで復習</b>すると、記憶はどんどん長持ちするようになります。このアプリは正解するたびに次の復習を「1日後→3日後→7日後→14日後→30日後」と自動で間隔を広げます。</p>
+    <cite>Ebbinghaus (1885)／Cepeda et al. (2006) の254研究のメタ分析：分散学習は一夜漬けより長期記憶を大きく改善</cite>
+
+    <h3>2. 検索練習（テスト効果）— 読むより思い出す</h3>
+    <p>教科書を読み直すより、<b>問題に答えて記憶から「取り出す」</b>方が、長期的に約1.5倍以上記憶に残ることが実験で示されています。だからこのアプリはすべてクイズ形式です。</p>
+    <cite>Roediger & Karpicke (2006), Psychological Science：1週間後のテストで再読グループを大きく上回る</cite>
+
+    <h3>3. 即時フィードバック — 直後の解説で修正</h3>
+    <p>答えた<b>直後</b>に正誤と理由がわかると、誤った理解がそのまま定着するのを防げます。全問に「なぜそうなるか」の解説つき。</p>
+    <cite>Hattie & Timperley (2007)：フィードバックは学力への効果が最も大きい介入のひとつ</cite>
+
+    <h3>4. インターリービング — 教科を混ぜて出題</h3>
+    <p>同じ単元を続けて解くより、<b>違う種類の問題を混ぜる</b>方が「どの解き方を使うか」を毎回考えるため、テスト本番に強い力がつきます。今日のクエストは5教科ミックスです。</p>
+    <cite>Rohrer & Taylor (2007)：混合練習グループは1週間後のテストで成績が大きく向上</cite>
+
+    <h3>5. まちがい直し — 正解するまで終わらない</h3>
+    <p>まちがえた問題はクエストの最後にもう一度出ます。<b>自力で思い出して正解し直す</b>ことが、次に同じミスをしない一番の近道です。</p>
+
+    <h3>6. ゲーミフィケーション — 続けられる仕組み</h3>
+    <p>XP・レベル・連続日数・バッジは「今日もやろう」という気持ちを支えるためのものです。学習は<b>短時間でも毎日続ける</b>ことが最も効果的だからこそ、続けたくなる仕掛けを入れています。</p>
+    <cite>Hamari et al. (2014) のレビュー／自己決定理論 (Deci & Ryan)：達成の可視化は内発的動機づけを支える</cite>
+
+    <h3>7. カリキュラム連動 — 習ったところから出題</h3>
+    <p>学校の授業進度（前期後期制・標準的な教科書の年間計画）に合わせて、<b>いま習っている範囲までの単元</b>だけが今日のクエストに登場します（現在：${termName()}・〜${monthLabel(schoolMonth())}）。授業で習う→その日のうちにクイズで思い出す、が最強の組み合わせです。未習単元は「特訓」タブから先取りもできます。</p>
+
+    <h3>📚 収録範囲（中学1年）</h3>
+    <p>数学（正負の数・文字と式・一次方程式・比例と反比例・平面図形・空間図形・データの活用）／英語（be動詞・一般動詞・疑問詞・命令文とcan・名詞と代名詞・三単現・現在進行形・過去形）／国語（漢字・文法・語彙）／理科（植物・物質・光音力・大地）／社会（世界の姿・気候と暮らし・歴史 古代〜鎌倉）— 全${BANK.length}問</p>
+    <button class="btn-sub" onclick="resetAll()" style="color:var(--ng)">学習データをリセットする</button>
+  </div>`;
+}
+window.resetAll = ()=>{
+  if(confirm("本当にすべての学習記録を消しますか？この操作は取り消せません。")){
+    localStorage.removeItem(KEY); S = load(); go("home");
+  }
+};
+
+/* 起動 */
+go("home");
+</script>
+</body>
+</html>
