@@ -108,6 +108,17 @@
   .monster-row .memoji{font-size:32px}
   .monster-row.beaten .memoji{filter:grayscale(.4)}
   .monster-row.locked{opacity:.45;filter:grayscale(1)}
+  /* 特訓：切り替えタブ・修行の部屋 */
+  .segrow{display:flex;gap:8px;margin-bottom:14px}
+  .segbtn{flex:1;padding:11px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);font-size:13px;color:var(--sub);font-weight:700}
+  .segbtn.active{background:linear-gradient(135deg,#5b7cfa,#8a5bfa);color:#fff;border-color:transparent}
+  .ans-input{width:100%;padding:14px 16px;border-radius:14px;border:2px solid var(--line);background:var(--panel2);color:var(--text);font-size:20px;font-weight:800;margin-bottom:10px;text-align:center}
+  .ans-input:focus{outline:none;border-color:#5b7cfa}
+  .ans-input.correct{border-color:var(--ok);background:rgba(62,207,142,.15)}
+  .ans-input.wrong{border-color:var(--ng);background:rgba(247,95,109,.15)}
+  .dojo-card{display:flex;align-items:center;gap:12px;width:100%;padding:14px;margin-bottom:8px;background:var(--panel2);border:1px solid var(--line);border-radius:14px;text-align:left}
+  .dojo-card .dico{font-size:28px}
+  .lockcount{font-size:13px;color:var(--sub);text-align:center;padding:8px 0}
 </style>
 </head>
 <body>
@@ -319,6 +330,127 @@ const BANK = [
 {s:"soc",u:"歴史・平安〜鎌倉",q:"鎌倉幕府を開いた人物は？",c:["源頼朝","源義経","平清盛","北条政子"],e:"1192年に征夷大将軍に任命され、武家政権を確立しました。"},
 {s:"soc",u:"歴史・平安〜鎌倉",q:"元寇（元の襲来）のときの鎌倉幕府の執権は？",c:["北条時宗","北条政子","北条泰時","源実朝"],e:"文永の役・弘安の役の2度の襲来を退けました。"},
 {s:"soc",u:"歴史・平安〜鎌倉",q:"将軍が御家人に土地を保護・恩賞として与え、御家人が戦いで奉仕する関係を何という？",c:["御恩と奉公","参勤交代","荘園制","朝貢"],e:"土地を仲立ちにした主従関係が鎌倉幕府を支えました。"},
+
+/* =====================================================================
+   追加問題（第2弾）— 全27単元に2〜3問ずつ追加。一部は入力式（t:"input"）。
+   入力式は答えが一意に定まる問題のみを採用し、計算問題はすべて3回以上検算済み。
+   ===================================================================== */
+/* ===== 数学・正負の数（追加） ===== */
+{s:"math",u:"正負の数",q:"(−9)+4 を計算すると？",c:["−5","5","−13","13"],e:"異符号の2数の和は、絶対値の差に絶対値が大きいほうの符号をつけます。9−4=5、大きいのは9（負）なので−5。"},
+{s:"math",u:"正負の数",q:"8−15 を計算すると？",c:["−7","7","−23","23"],e:"8−15＝8+(−15)。絶対値の差 15−8＝7 に、絶対値が大きい−15の符号をつけて−7。"},
+{s:"math",u:"正負の数",t:"input",q:"(−4)×5 を計算すると？（数字のみで答えよう）",ans:"-20",e:"負×正＝負。4×5=20 で符号は−なので−20。"},
+/* ===== 数学・文字と式（追加） ===== */
+{s:"math",u:"文字と式",q:"2a+3b−a+b を簡単にすると？",c:["a+4b","3a+4b","a+2b","3a+2b"],e:"aの項どうし、bの項どうしをそれぞれまとめます。2a−a=a、3b+b=4b。"},
+{s:"math",u:"文字と式",q:"x=3のとき、2x²−1 の値は？",c:["17","35","5","11"],e:"x²=3×3=9を先に計算。2×9=18、18−1=17。（2x）²と間違えないように。"},
+{s:"math",u:"文字と式",t:"input",q:"a=−2のとき、3a+7 の値は？（数字のみ）",ans:"1",e:"3×(−2)+7＝−6+7＝1。"},
+/* ===== 数学・一次方程式（追加） ===== */
+{s:"math",u:"一次方程式",t:"input",q:"方程式 4x−9=11 を解くと、xの値は？（数字のみ）",ans:"5",e:"−9を移項して4x=20、両辺を4でわってx=5。"},
+{s:"math",u:"一次方程式",q:"方程式 7x+2=4x+17 の解は？",c:["x=5","x=15","x=3","x=−5"],e:"文字を左へ、数を右へ移項すると3x=15、x=5。"},
+{s:"math",u:"一次方程式",q:"方程式 2(x−3)=10 の解は？",c:["x=8","x=5","x=2","x=11"],e:"分配法則で2x−6=10、2x=16、x=8。"},
+/* ===== 数学・比例と反比例（追加） ===== */
+{s:"math",u:"比例と反比例",q:"y=−4x で x=−3 のときの y の値は？",c:["12","−12","7","−7"],e:"負×負＝正。(−4)×(−3)=12。"},
+{s:"math",u:"比例と反比例",q:"反比例 y=24/x で y=6 のときの x の値は？",c:["4","18","30","6"],e:"y=a/xの a はxy=一定なので、a=24。x=24÷6=4。"},
+{s:"math",u:"比例と反比例",t:"input",q:"yはxに比例し、x=5のときy=15。x=8のときのyの値は？（数字のみ）",ans:"24",e:"比例定数a=15÷5=3。y=3×8=24。"},
+/* ===== 数学・平面図形（追加） ===== */
+{s:"math",u:"平面図形",q:"半径4cmの円の面積は？（円周率はπ）",c:["16π cm²","8π cm²","4π cm²","32π cm²"],e:"円の面積＝πr²。π×4²=16π。"},
+{s:"math",u:"平面図形",q:"半径9cm・中心角40°のおうぎ形の弧の長さは？",c:["2π cm","4π cm","π cm","6π cm"],e:"円周は2π×9=18π。40/360＝1/9なので、18π÷9＝2π。"},
+{s:"math",u:"平面図形",q:"2つの図形の形も大きさも同じであることを何という？",c:["合同","相似","対称","平行"],e:"形も大きさも同じなら合同。形だけ同じ（拡大・縮小の関係）は相似です。"},
+/* ===== 数学・空間図形（追加） ===== */
+{s:"math",u:"空間図形",q:"底面が1辺4cmの正方形、高さ6cmの四角柱の体積は？",c:["96 cm³","64 cm³","24 cm³","48 cm³"],e:"底面積は4×4=16cm²。体積＝底面積×高さ＝16×6=96cm³。"},
+{s:"math",u:"空間図形",t:"input",q:"底面積20cm²、高さ9cmの角錐の体積は？（数字のみ、cm³）",ans:"60",e:"錐の体積＝(1/3)×底面積×高さ＝(1/3)×20×9＝60。"},
+{s:"math",u:"空間図形",q:"円柱の展開図で、側面はどんな形になる？",c:["長方形","おうぎ形","円","三角形"],e:"円柱の側面を切り開くと長方形になります（円錐の側面はおうぎ形）。"},
+/* ===== 数学・データの活用（追加） ===== */
+{s:"math",u:"データの活用",q:"データ 2, 4, 4, 6, 9 の平均値は？",c:["5","4","6","25"],e:"合計は2+4+4+6+9=25。25÷5＝5。"},
+{s:"math",u:"データの活用",q:"データ 4, 7, 7, 7, 10, 15 の最頻値は？",c:["7","10","4","8.3"],e:"最も多く出てくる値（最頻値）は3回出てくる7。平均値（約8.3）と混同しないように。"},
+{s:"math",u:"データの活用",q:"階級が「20以上30未満」のとき、この階級の幅（階級の幅）は？",c:["10","20","30","5"],e:"30−20＝10。区間の広さを階級の幅といいます。"},
+/* ===== 英語・be動詞（追加） ===== */
+{s:"eng",u:"be動詞",q:"We ___ happy today.",c:["are","is","am","be"],e:"主語がwe（複数）のときbe動詞はare。"},
+{s:"eng",u:"be動詞",q:"___ she a teacher?",c:["Is","Are","Am","Do"],e:"主語sheは単数なのでbe動詞はis。疑問文はbe動詞を先頭に。"},
+{s:"eng",u:"be動詞",q:"「are not」の短縮形は？",c:["aren't","isn't","don't","not're"],e:"are not→aren't。isn'tはis notの短縮形です。"},
+/* ===== 英語・一般動詞（基本）（追加） ===== */
+{s:"eng",u:"一般動詞（基本）",q:"They ___ English on Mondays.",c:["study","studies","studying","studied"],e:"主語theyは複数（三人称単数ではない）なので動詞は原形study。"},
+{s:"eng",u:"一般動詞（基本）",q:"I ___ a bike to school.",c:["ride","rides","riding","rode"],e:"主語Iなので動詞は原形ride。"},
+{s:"eng",u:"一般動詞（基本）",q:"___ they have a car? — No, they don't.",c:["Do","Does","Are","Is"],e:"theyは複数なので一般動詞の疑問文はDoで始めます。"},
+/* ===== 英語・三単現（3人称単数）（追加） ===== */
+{s:"eng",u:"三単現（3人称単数）",q:"My mother ___ breakfast every morning.",c:["cooks","cook","cooking","is cook"],e:"主語My motherは三人称単数なので動詞にsをつけてcooks。"},
+{s:"eng",u:"三単現（3人称単数）",q:"go の三単現は？",c:["goes","gos","goies","goed"],e:"o, s, x, ch, shで終わる動詞はesをつけます。go→goes。"},
+{s:"eng",u:"三単現（3人称単数）",t:"input",q:"wash（洗う）の三単現（三人称単数・現在形）は？（アルファベットで）",ans:"washes",e:"shで終わる動詞はesをつけます。wash→washes。"},
+/* ===== 英語・疑問詞（追加） ===== */
+{s:"eng",u:"疑問詞",q:"___ is it today? — It's Monday.",c:["What day","What time","Which day","How"],e:"曜日をたずねるときはWhat day。"},
+{s:"eng",u:"疑問詞",q:"___ pens do you have? — I have two.",c:["How many","How much","How old","What"],e:"数をたずねるときはHow many＋名詞の複数形。"},
+{s:"eng",u:"疑問詞",q:"___ is your birthday? — It's May 3rd.",c:["When","Where","Who","Which"],e:"日付・時をたずねるのはWhen。"},
+/* ===== 英語・命令文とcan（追加） ===== */
+{s:"eng",u:"命令文とcan",q:"___ the door, please.（ドアを閉めてください）",c:["Close","Closes","Closing","Closed"],e:"命令文は動詞の原形で始めます。"},
+{s:"eng",u:"命令文とcan",q:"Can you swim? の答え方として正しいのは？",c:["Yes, I can.","Yes, I do.","Yes, I am.","Yes, I have."],e:"canでたずねられたらcanで答えます。"},
+{s:"eng",u:"命令文とcan",q:"___ swim in this river.（この川で泳いではいけません）",c:["Don't","Not","Isn't","Can't"],e:"禁止の命令文はDon't＋動詞の原形。"},
+/* ===== 英語・名詞と代名詞（追加） ===== */
+{s:"eng",u:"名詞と代名詞",q:"leaf（葉）の複数形は？",c:["leaves","leafs","leaves's","leafes"],e:"fで終わる名詞の多くはfをvに変えてesをつけます。leaf→leaves。"},
+{s:"eng",u:"名詞と代名詞",q:"This bag is ___.（これは私たちのものです）",c:["ours","our","us","we"],e:"「〜のもの」を表す所有代名詞はours。"},
+{s:"eng",u:"名詞と代名詞",t:"input",q:"I like ___.（私は彼女が好きです）（アルファベットで）",ans:"her",e:"動詞の目的語になる「彼女を」は目的格her。"},
+/* ===== 英語・現在進行形（追加） ===== */
+{s:"eng",u:"現在進行形",q:"They ___ playing soccer now.",c:["are","is","am","do"],e:"主語theyは複数なのでare。"},
+{s:"eng",u:"現在進行形",q:"sit の ing形は？",c:["sitting","siting","sitted","sits"],e:"〈短母音＋子音字〉で終わる動詞は最後の文字を重ねてing。sit→sitting。"},
+{s:"eng",u:"現在進行形",q:"What ___ you doing?",c:["are","is","do","did"],e:"進行形の疑問文はbe動詞を先頭に。主語youなのでare。"},
+/* ===== 英語・過去形（追加） ===== */
+{s:"eng",u:"過去形",q:"eat の過去形は？",c:["ate","eated","eaten","eats"],e:"eatは不規則動詞。eat−ate−eaten。"},
+{s:"eng",u:"過去形",q:"I ___ my homework last night.",c:["did","do","does","doing"],e:"do の過去形はdid。last night（昨夜）があるので過去形。"},
+{s:"eng",u:"過去形",t:"input",q:"have の過去形は？（アルファベットで）",ans:"had",e:"haveは不規則動詞。have−had−had。"},
+/* ===== 国語・漢字の読み（追加） ===== */
+{s:"jpn",u:"漢字の読み",q:"「潔い」の読み方は？",c:["いさぎよい","きよい","いさましい","すがすがしい"],e:"潔い＝未練がましくなく立派な様子。"},
+{s:"jpn",u:"漢字の読み",t:"input",q:"「巧みな話術」の「巧み」の読み方は？（ひらがなで）",ans:"たくみ",e:"巧み＝技術や扱い方がすぐれている様子。"},
+{s:"jpn",u:"漢字の読み",t:"input",q:"「経験を培う」の「培う」の読み方は？（ひらがなで）",ans:"つちかう",e:"培う＝時間をかけて育てること。「栽培」の培です。"},
+{s:"jpn",u:"漢字の読み",q:"「本を著す」の「著す」の読み方は？",c:["あらわす","ちょす","いちじるす","あらわれる"],e:"著す＝書物を書いて世に出すこと。「著者」の著です。"},
+{s:"jpn",u:"漢字の読み",t:"input",q:"「費用を賄う」の「賄う」の読み方は？（ひらがなで）",ans:"まかなう",e:"賄う＝必要なものをやりくりしてそろえること。"},
+/* ===== 国語・漢字の書き（追加） ===== */
+{s:"jpn",u:"漢字の書き",q:"「計画をケントウする」（内容を調べてよく考える）のケントウは？",c:["検討","見当","健闘","県当"],e:"検討＝物事をよく調べて考えること。「健闘」（力いっぱい戦うこと）と読みが同じなので注意。"},
+{s:"jpn",u:"漢字の書き",q:"「キセイの服を買う」のキセイは？",c:["既製","帰省","規制","既成"],e:"既製＝すでに商品として作られていること（既製服）。「既成」（すでにできあがっていること）と混同しやすい同音異義語。"},
+{s:"jpn",u:"漢字の書き",q:"「シンケンに取り組む」のシンケンは？",c:["真剣","慎重","深刻","新券"],e:"真剣＝本気で物事に取り組む様子。「深刻」は問題や事態の程度が重いときに使います。"},
+{s:"jpn",u:"漢字の書き",q:"「イガイな結果」のイガイは？",c:["意外","以外","異外","委外"],e:"意外＝思いがけないこと。「以外」（それを除いて）との同音異義語に注意。"},
+{s:"jpn",u:"漢字の書き",q:"「センモン家に相談する」のセンモンは？",c:["専門","専問","専聞","線門"],e:"専門＝ある分野をとくに深く研究・担当していること。"},
+/* ===== 国語・文法（追加） ===== */
+{s:"jpn",u:"文法",q:"「花がきれいに咲く。」の主語はどれ？",c:["花が","きれいに","咲く","きれいに咲く"],e:"「何が」にあたる文節が主語。「花が」が主語です。"},
+{s:"jpn",u:"文法",q:"「食べる」を命令の形（命令形）にすると？",c:["食べろ","食べた","食べます","食べない"],e:"一段動詞（食べる）の命令形は「〜ろ」の形。食べる→食べろ。"},
+{s:"jpn",u:"文法",q:"「赤い花」の「赤い」のように、あとの言葉をくわしく説明する文の成分を何という？",c:["修飾語","主語","述語","接続語"],e:"他の文節の内容をくわしくするのが修飾語です。"},
+{s:"jpn",u:"文法",q:"「この」「その」「あの」「どの」の品詞を何という？",c:["連体詞","形容詞","副詞","代名詞"],e:"活用がなく、名詞だけを修飾するのが連体詞です。"},
+{s:"jpn",u:"文法",q:"「走る」の可能動詞（〜できる、の意味を表す形）は？",c:["走れる","走られる","走らせる","走った"],e:"五段動詞の可能動詞は語尾を「エ段＋る」に変えます。走る→走れる。"},
+/* ===== 国語・語彙とことわざ（追加） ===== */
+{s:"jpn",u:"語彙とことわざ",q:"「顔が広い」の意味は？",c:["知り合いが多い","顔が大きい","有名人である","はずかしがり屋だ"],e:"人づきあいが広く、多くの人に知られていることを表します。"},
+{s:"jpn",u:"語彙とことわざ",q:"「棚に上げる」の意味は？",c:["自分の都合の悪いことにはふれないでおく","高いところに物を置く","人にゆずる","おこづかいをためる"],e:"自分の欠点や失敗を問題にせず、他人のことだけを言うときに使います。"},
+{s:"jpn",u:"語彙とことわざ",q:"「情けは人のためならず」の本来の意味は？",c:["人に親切にすれば、めぐりめぐって自分に返ってくる","人に情けをかけるとその人のためにならない","がまん強い人は成功する","なさけをかけると自分が損をする"],e:"「人のためならず」は「人のためにならない」ではなく「人のためだけではない（自分にも返ってくる）」という意味。誤解されやすいことわざです。"},
+{s:"jpn",u:"語彙とことわざ",q:"「創造」の対義語は？",c:["模倣","破壊","想像","制作"],e:"創造（新しいものを作り出す）⇔模倣（まねること）。「想像」は同じ読みの別語なので注意。"},
+{s:"jpn",u:"語彙とことわざ",q:"「腹が立つ」の意味は？",c:["怒る","おなかがすく","緊張する","がっかりする"],e:"腹が立つ＝怒りの気持ちがわくこと。"},
+/* ===== 理科・植物の世界（追加） ===== */
+{s:"sci",u:"植物の世界",q:"花のつくりで、成長すると種子になる部分は？",c:["胚珠","子房","がく","やく"],e:"胚珠は種子に、それを包む子房は果実になります。"},
+{s:"sci",u:"植物の世界",q:"被子植物のうち、子葉が1枚のなかまを何という？",c:["単子葉類","双子葉類","裸子植物","シダ植物"],e:"単子葉類は子葉1枚・平行脈・ひげ根。双子葉類は子葉2枚・網状脈・主根と側根です。"},
+{s:"sci",u:"植物の世界",q:"根・茎・葉の区別がなく、仮根で体を地面に固定する植物のなかまは？",c:["コケ植物","シダ植物","裸子植物","被子植物"],e:"コケ植物は維管束を持たず、仮根で体を支えます（水や養分の吸収は体全体で行う）。"},
+/* ===== 理科・身のまわりの物質（追加） ===== */
+{s:"sci",u:"身のまわりの物質",t:"input",q:"60gの水に食塩15gをとかした食塩水の質量パーセント濃度は？（数字のみ、％）",ans:"20",e:"濃度＝溶質÷溶液全体×100。15÷(60+15)×100＝15÷75×100＝20％。"},
+{s:"sci",u:"身のまわりの物質",q:"気体を集める方法のうち、空気より軽い気体を集めるのに適した方法は？",c:["上方置換法","下方置換法","水上置換法","ろ過"],e:"アンモニアのように空気より軽い気体は、容器の上のほうにたまるので上方置換法を使います。"},
+{s:"sci",u:"身のまわりの物質",q:"液体を加熱して気体にし、それを冷やして再び液体として取り出す方法は？",c:["蒸留","ろ過","再結晶","昇華"],e:"沸点のちがいを利用して物質を分離する方法が蒸留です。"},
+/* ===== 理科・光・音・力（追加） ===== */
+{s:"sci",u:"光・音・力",q:"凸レンズを通った光が集まる点を何という？",c:["焦点","虚点","実点","中心点"],e:"凸レンズの軸に平行な光は、レンズを通ったあと焦点に集まります。"},
+{s:"sci",u:"光・音・力",t:"input",q:"3Nの力が2m²の面積にはたらくときの圧力は？（数字のみ、Pa）",ans:"1.5",e:"圧力(Pa)＝力(N)÷面積(m²)。3÷2＝1.5。"},
+{s:"sci",u:"光・音・力",q:"音がもっとも速く伝わるのは次のうちどれ？",c:["固体","気体","液体","真空"],e:"音を伝える粒子が密なほど速く伝わります。固体＞液体＞気体の順。真空中は音は伝わりません。"},
+/* ===== 理科・大地の変化（追加） ===== */
+{s:"sci",u:"大地の変化",q:"堆積岩のうち、生物の死がいなどからでき、うすい塩酸をかけると気体（二酸化炭素）が発生する岩石は？",c:["石灰岩","チャート","凝灰岩","れき岩"],e:"石灰岩は炭酸カルシウムを多くふくむため、塩酸と反応して二酸化炭素を発生します。"},
+{s:"sci",u:"大地の変化",q:"地震そのものの規模（エネルギーの大きさ）を表す指標は？",c:["マグニチュード","震度","初期微動","主要動"],e:"マグニチュードは地震の規模、震度はある地点でのゆれの強さを表します。"},
+{s:"sci",u:"大地の変化",q:"火山灰などが堆積して固まってできた堆積岩を何という？",c:["凝灰岩","石灰岩","チャート","泥岩"],e:"凝灰岩は火山灰・軽石などが押し固められてできます。"},
+/* ===== 社会・世界の姿（追加） ===== */
+{s:"soc",u:"世界の姿",q:"六大陸のうち、日本が属する大陸は？",c:["ユーラシア大陸","北アメリカ大陸","アフリカ大陸","オーストラリア大陸"],e:"日本はユーラシア大陸の東の海上に位置する島国です。"},
+{s:"soc",u:"世界の姿",q:"地球儀や地図上で、南北の位置（緯度）を表す線を何という？",c:["緯線","経線","本初子午線","日付変更線"],e:"緯線は赤道に平行な線で、南北の位置（緯度）を表します。"},
+{s:"soc",u:"世界の姿",q:"六大陸のうち、面積が最も小さい大陸は？",c:["オーストラリア大陸","南極大陸","アフリカ大陸","南アメリカ大陸"],e:"オーストラリア大陸は六大陸の中で最も面積が小さい大陸です。"},
+/* ===== 社会・世界の気候と暮らし（追加） ===== */
+{s:"soc",u:"世界の気候と暮らし",q:"冷帯（亜寒帯）に広がる針葉樹の森林を何という？",c:["タイガ","ステップ","サバナ","ツンドラ"],e:"タイガはロシアやカナダなど冷帯地域に広がる針葉樹林です。"},
+{s:"soc",u:"世界の気候と暮らし",q:"高山地域などで、家畜とともに移動しながら生活する牧畜を何という？",c:["遊牧","焼畑農業","二期作","混合農業"],e:"遊牧は牧草を求めて家畜とともに移動する牧畜のスタイルです。"},
+{s:"soc",u:"世界の気候と暮らし",q:"キリスト教で、人々が礼拝を行う宗教施設は？",c:["教会","モスク","寺院","神社"],e:"イスラム教はモスク、仏教は寺院、神道は神社が礼拝・信仰の施設です。"},
+/* ===== 社会・歴史（古代）（追加） ===== */
+{s:"soc",u:"歴史・古代",q:"打製石器を使い、狩りや採集を行っていた時代を何という？",c:["旧石器時代","縄文時代","弥生時代","古墳時代"],e:"旧石器時代は、まだ土器を作っていなかった時代です。"},
+{s:"soc",u:"歴史・古代",q:"古墳時代、大和政権（大和朝廷）の中心となった王は何と呼ばれた？",c:["大王","天皇","将軍","関白"],e:"「天皇」という称号が使われる以前、大和政権の王は「大王（おおきみ）」と呼ばれていました。"},
+{s:"soc",u:"歴史・古代",q:"奈良時代、農民の税のうち、収穫した稲を納める税を何という？",c:["租","庸","調","防人"],e:"租は稲、庸は労役の代わりの布など、調は地方の特産物を都に納める税でした。"},
+/* ===== 社会・歴史（平安〜鎌倉）（追加） ===== */
+{s:"soc",u:"歴史・平安〜鎌倉",q:"894年、遣唐使の停止を提案した人物は？",c:["菅原道真","藤原道長","最澄","空海"],e:"唐(中国)の衰えなどを理由に、菅原道真が遣唐使の停止を提案しました。"},
+{s:"soc",u:"歴史・平安〜鎌倉",q:"平安時代、かな文字を使って「源氏物語」を書いた人物は？",c:["紫式部","清少納言","紀貫之","小野小町"],e:"紫式部は「源氏物語」の作者。清少納言は随筆「枕草子」の作者です。"},
+{s:"soc",u:"歴史・平安〜鎌倉",q:"鎌倉時代に法然が開いた仏教の宗派は？",c:["浄土宗","浄土真宗","禅宗（臨済宗）","日蓮宗"],e:"法然が浄土宗を開き、その弟子の親鸞が浄土真宗を開きました。"},
 ];
 
 /* ============ 学習進度（中1・前期後期制の標準カリキュラム連動） ============ */
@@ -343,18 +475,133 @@ function unitUnlocked(s,u){ const sm = CURRICULUM[s+"|"+u]; return sm===undefine
 /* 正解＝こうげき、まちがい＝反撃を受ける。弱点教科の問題で正解すると2倍ダメージ。
    バトル中の解答もふつうのクエストと同じく復習スケジュールに記録される。 */
 const PLAYER_HP = 30;
-const MONSTERS = [
-  {emoji:"🐛", name:"ワスレムシ",       lv:1,  hp:40,  atk:6,  weak:"math", line:"「ならったこと、もうわすれちゃった？」"},
-  {emoji:"👻", name:"サボリーヌ",       lv:3,  hp:48,  atk:7,  weak:"eng",  line:"「きょうくらい、サボっちゃえば〜？」"},
-  {emoji:"🍄", name:"ネムネムダケ",     lv:5,  hp:56,  atk:7,  weak:"jpn",  line:"「ねむい…きみもねむくなーれ…」"},
-  {emoji:"🐺", name:"ケアレスウルフ",   lv:7,  hp:64,  atk:8,  weak:"sci",  line:"「おっと、うっかりミスをねらうぜ！」"},
-  {emoji:"🧟", name:"ダラダラゾンビ",   lv:9,  hp:72,  atk:8,  weak:"soc",  line:"「あとで…あとでやればいいじゃん…」"},
-  {emoji:"🤖", name:"マルアンキロボ",   lv:11, hp:80,  atk:9,  weak:"math", line:"「イミハワカラナクテモ、オボエレバヨシ」"},
-  {emoji:"🐲", name:"ニガテドラゴン",   lv:13, hp:88,  atk:10, weak:"eng",  line:"「にがて意識をこじらせてやる！」"},
-  {emoji:"🦉", name:"ヨフカシフクロウ", lv:15, hp:96,  atk:10, weak:"sci",  line:"「夜ふかしすれば記憶は消えるホゥ」"},
-  {emoji:"😈", name:"テストデーモン",   lv:17, hp:104, atk:11, weak:"jpn",  line:"「テスト本番でまっしろにしてやろう」"},
-  {emoji:"👑", name:"ボウキャクキング", lv:20, hp:130, atk:12, weak:null,   line:"「すべての記憶を忘却の彼方へ！」"},
+
+/* 100体構成：9種のふつうモンスター×10段階（ウェーブ）＋各ウェーブ末尾のウェーブボス10体＝100体。
+   段階が進むほどHP・こうげき力が上がり、弱点教科も5教科を均等に巡回する。 */
+const MONSTER_SPECIES = [
+  {emoji:"🐛", base:"ワスレムシ",       weak:"math", line:"「ならったこと、もうわすれちゃった？」"},
+  {emoji:"👻", base:"サボリーヌ",       weak:"eng",  line:"「きょうくらい、サボっちゃえば〜？」"},
+  {emoji:"🍄", base:"ネムネムダケ",     weak:"jpn",  line:"「ねむい…きみもねむくなーれ…」"},
+  {emoji:"🐺", base:"ケアレスウルフ",   weak:"sci",  line:"「おっと、うっかりミスをねらうぜ！」"},
+  {emoji:"🧟", base:"ダラダラゾンビ",   weak:"soc",  line:"「あとで…あとでやればいいじゃん…」"},
+  {emoji:"🤖", base:"マルアンキロボ",   weak:"math", line:"「イミハワカラナクテモ、オボエレバヨシ」"},
+  {emoji:"🐲", base:"ニガテドラゴン",   weak:"eng",  line:"「にがて意識をこじらせてやる！」"},
+  {emoji:"🦉", base:"ヨフカシフクロウ", weak:"sci",  line:"「夜ふかしすれば記憶は消えるホゥ」"},
+  {emoji:"😈", base:"テストデーモン",   weak:"jpn",  line:"「テスト本番でまっしろにしてやろう」"},
 ];
+const TIER_PREFIX = ["ちび","","げんきな","すばやい","したたかな","じゅくれんの","きょうぼうな","でんせつの","こんじょうの","おうごんの"];
+const WAVE_BOSSES = [
+  {emoji:"👹", name:"忘却の見張り番",       weak:"math", line:"「ここから先は、忘れたものだけ通す」"},
+  {emoji:"👻", name:"三日坊主デーモン",     weak:"eng",  line:"「どうせ三日で終わるんだろ？」"},
+  {emoji:"🕶️", name:"テストプレッシャー幽鬼", weak:"jpn",  line:"「本番であたまがまっしろになれ…」"},
+  {emoji:"🗿", name:"暗記拒否ゴーレム",     weak:"sci",  line:"「おぼえるのは　めんどうだ」"},
+  {emoji:"😴", name:"睡魔将軍",             weak:"soc",  line:"「さあ、いっしょに　ねむろう」"},
+  {emoji:"🐗", name:"油断のあらくれ",       weak:"math", line:"「かんぺきだと思った時が、いちばんあぶない」"},
+  {emoji:"📱", name:"スマホの誘惑魔",       weak:"eng",  line:"「あと5分だけ…って言ったよね？」"},
+  {emoji:"🐉", name:"一夜漬けドラゴン",     weak:"jpn",  line:"「前日にまとめてやれば、なんとかなる！」"},
+  {emoji:"🦇", name:"スランプの魔王",       weak:"sci",  line:"「がんばっても、のびない…そう思わせてやる」"},
+  {emoji:"👑", name:"ボウキャクキング",     weak:null,   line:"「すべての記憶を忘却の彼方へ！」"},
+];
+function buildMonsters(){
+  const arr = [];
+  for(let wave=0; wave<10; wave++){
+    for(let i=0;i<MONSTER_SPECIES.length;i++){
+      const sp = MONSTER_SPECIES[i];
+      const k = arr.length; // 0-indexed の全体通し番号
+      arr.push({
+        emoji: sp.emoji,
+        name: TIER_PREFIX[wave] + sp.base,
+        lv: k+1,
+        hp: 35 + Math.round(k*1.3),
+        atk: 6 + Math.floor(k/12),
+        weak: sp.weak,
+        line: sp.line,
+      });
+    }
+    const boss = WAVE_BOSSES[wave];
+    const k = arr.length;
+    arr.push({
+      emoji: boss.emoji,
+      name: boss.name,
+      lv: k+1,
+      hp: 55 + Math.round(k*1.6),
+      atk: 8 + Math.floor(k/10),
+      weak: boss.weak,
+      line: boss.line,
+    });
+  }
+  return arr;
+}
+const MONSTERS = buildMonsters();
+
+/* ============ 修行の部屋（基礎ドリル）============
+   二桁の計算・九九・漢字の読みなど「直感で答えるべき、暗記メインの問題」を
+   入力式でくり返し練習するコーナー。計算問題はその場で計算して出題するため、
+   問題と答えが必ず一致する（人が書き写す余地がなく、誤りが起こらない）。
+   漢字の読みは読み方が一意に定まる語のみを採用し、すべて複数回確認済み。 */
+const KANJI_DRILL = [
+  {phrase:"最後まで頑張る",   word:"頑張る",   ans:"がんばる"},
+  {phrase:"素晴らしい景色",   word:"素晴らしい", ans:"すばらしい"},
+  {phrase:"面白い本を読む",   word:"面白い",   ans:"おもしろい"},
+  {phrase:"一生懸命練習する", word:"一生懸命", ans:"いっしょうけんめい"},
+  {phrase:"十分に休む",       word:"十分",     ans:"じゅうぶん"},
+  {phrase:"特急電車に乗る",   word:"特急",     ans:"とっきゅう"},
+  {phrase:"新鮮な野菜",       word:"新鮮",     ans:"しんせん"},
+  {phrase:"我慢して待つ",     word:"我慢",     ans:"がまん"},
+  {phrase:"難問に挑戦する",   word:"挑戦",     ans:"ちょうせん"},
+  {phrase:"発表の前に緊張する", word:"緊張",   ans:"きんちょう"},
+  {phrase:"授業に集中する",   word:"集中",     ans:"しゅうちゅう"},
+  {phrase:"問題を解決する",   word:"解決",     ans:"かいけつ"},
+  {phrase:"大きく成長する",   word:"成長",     ans:"せいちょう"},
+  {phrase:"毎日努力する",     word:"努力",     ans:"どりょく"},
+  {phrase:"目標を達成する",   word:"達成",     ans:"たっせい"},
+  {phrase:"先生に感謝する",   word:"感謝",     ans:"かんしゃ"},
+  {phrase:"相手を尊重する",   word:"尊重",     ans:"そんちょう"},
+  {phrase:"簡単な問題",       word:"簡単",     ans:"かんたん"},
+  {phrase:"複雑な計算",       word:"複雑",     ans:"ふくざつ"},
+  {phrase:"正確に書き写す",   word:"正確",     ans:"せいかく"},
+  {phrase:"丁寧にあいさつする", word:"丁寧",   ans:"ていねい"},
+  {phrase:"積極的に発言する", word:"積極的",   ans:"せっきょくてき"},
+  {phrase:"消極的な態度",     word:"消極的",   ans:"しょうきょくてき"},
+  {phrase:"貴重な体験",       word:"貴重",     ans:"きちょう"},
+  {phrase:"深刻な問題",       word:"深刻",     ans:"しんこく"},
+  {phrase:"華やかな衣装",     word:"華やか",   ans:"はなやか"},
+  {phrase:"健やかに育つ",     word:"健やか",   ans:"すこやか"},
+  {phrase:"温厚な性格",       word:"温厚",     ans:"おんこう"},
+  {phrase:"率直な意見を言う", word:"率直",     ans:"そっちょく"},
+  {phrase:"単純な仕組み",     word:"単純",     ans:"たんじゅん"},
+  {phrase:"冷静に考える",     word:"冷静",     ans:"れいせい"},
+  {phrase:"迅速に対応する",   word:"迅速",     ans:"じんそく"},
+  {phrase:"慎重に選ぶ",       word:"慎重",     ans:"しんちょう"},
+  {phrase:"誠実な人柄",       word:"誠実",     ans:"せいじつ"},
+  {phrase:"柔軟な考え方",     word:"柔軟",     ans:"じゅうなん"},
+  {phrase:"内容を明確にする", word:"明確",     ans:"めいかく"},
+  {phrase:"快適な部屋",       word:"快適",     ans:"かいてき"},
+  {phrase:"郵便局へ行く",     word:"郵便局",   ans:"ゆうびんきょく"},
+  {phrase:"独立した部屋",     word:"独立",     ans:"どくりつ"},
+  {phrase:"適切な判断をする", word:"適切",     ans:"てきせつ"},
+];
+const DOJO_SIZE = 12;
+const DOJO_CATS = {
+  add:{emoji:"➕", name:"二桁のたし算",   statKey:"addCorrect"},
+  sub:{emoji:"➖", name:"二桁のひき算",   statKey:"subCorrect"},
+  mul:{emoji:"✖️", name:"かけ算九九",     statKey:"mulCorrect"},
+  kanji:{emoji:"📖", name:"漢字の読み",   statKey:"kanjiCorrect"},
+};
+/* 計算問題はその場で乱数から作って即座に正解を計算するため、問題と答えが食い違うことがない */
+function makeCalcProblem(cat){
+  if(cat==="add"){
+    const a = 10+Math.floor(Math.random()*90), b = 10+Math.floor(Math.random()*90);
+    return {q:`${a} ＋ ${b} ＝ ？`, ans:String(a+b)};
+  }
+  if(cat==="sub"){
+    let a = 10+Math.floor(Math.random()*90), b = 10+Math.floor(Math.random()*90);
+    if(a<b) [a,b] = [b,a];
+    return {q:`${a} − ${b} ＝ ？`, ans:String(a-b)};
+  }
+  const a = 1+Math.floor(Math.random()*9), b = 1+Math.floor(Math.random()*9);
+  return {q:`${a} × ${b} ＝ ？`, ans:String(a*b)};
+}
 
 /* ============ 学習エンジン（間隔反復・Leitner+SM-2簡易版） ============ */
 const DAY = 24*60*60*1000;
@@ -369,12 +616,15 @@ function load(){
     const d = JSON.parse(localStorage.getItem(KEY));
     if(d && d.items) return d;
   }catch(e){}
-  return {xp:0, answered:0, correct:0, reviewDone:0, sessions:0,
+  return {xp:0, answered:0, correct:0, reviewDone:0, sessions:0, inputCorrect:0,
           streak:0, lastDay:null, badges:[], perfectRuns:0, items:{}, sound:true,
-          battle:{stage:0, wins:0, losses:0, maxCombo:0}};
+          battle:{stage:0, wins:0, losses:0, maxCombo:0},
+          training:{sessions:0, addCorrect:0, subCorrect:0, mulCorrect:0, kanjiCorrect:0, bestCombo:0}};
 }
-/* 旧バージョンの保存データにはbattleがないため補完 */
+/* 旧バージョンの保存データには一部フィールドがないため補完 */
 if(!S.battle) S.battle = {stage:0, wins:0, losses:0, maxCombo:0};
+if(!S.training) S.training = {sessions:0, addCorrect:0, subCorrect:0, mulCorrect:0, kanjiCorrect:0, bestCombo:0};
+if(typeof S.inputCorrect !== "number") S.inputCorrect = 0;
 function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
 function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 
@@ -427,6 +677,18 @@ const BADGES = [
   {id:"btl10",   emoji:"🛡️", name:"連戦連勝",       desc:"バトルで10勝する",                     check:()=>S.battle.wins>=10},
   {id:"combo5",  emoji:"⚡", name:"コンボマスター", desc:"バトルで5連続正解コンボを決める",       check:()=>S.battle.maxCombo>=5},
   {id:"champ",   emoji:"👑", name:"まなびチャンピオン", desc:"すべてのモンスターを倒す",         check:()=>S.battle.stage>=MONSTERS.length},
+  /* ここから追加バッジ */
+  {id:"dojo1",   emoji:"🧘", name:"修行のはじめ",   desc:"修行の部屋を1回クリア",               check:()=>S.training.sessions>=1},
+  {id:"calc50",  emoji:"🔢", name:"計算の鬼",       desc:"修行で二桁の計算に合計50問正解",       check:()=>(S.training.addCorrect+S.training.subCorrect)>=50},
+  {id:"kuku50",  emoji:"✖️", name:"九九マスター",   desc:"修行のかけ算九九で50問正解",           check:()=>S.training.mulCorrect>=50},
+  {id:"kanji30", emoji:"📖", name:"漢字博士",       desc:"修行の漢字の読みで30問正解",           check:()=>S.training.kanjiCorrect>=30},
+  {id:"input10", emoji:"⌨️", name:"入力の達人",     desc:"入力式の問題に10問正解",               check:()=>S.inputCorrect>=10},
+  {id:"mon50",   emoji:"🗡️", name:"モンスターハンター", desc:"モンスターを50体たおす",           check:()=>S.battle.stage>=50},
+  {id:"win20",   emoji:"🛡️", name:"無敗の名声",     desc:"バトルで20勝する",                     check:()=>S.battle.wins>=20},
+  {id:"combo8",  emoji:"💥", name:"エクストラコンボ", desc:"バトルで8連続正解コンボを決める",     check:()=>S.battle.maxCombo>=8},
+  {id:"c500",    emoji:"📜", name:"伝説の学び手",   desc:"のべ500問に正解",                      check:()=>S.correct>=500},
+  {id:"streak14",emoji:"🌙", name:"継続は力なり",   desc:"14日連続で学習",                       check:()=>S.streak>=14},
+  {id:"m60",     emoji:"🦉", name:"記憶の賢者",     desc:"60問をマスター（7日以上あけて正解）",   check:()=>Object.values(S.items).filter(st=>st.stage>=MASTER_STAGE).length>=60},
 ];
 function checkNewBadges(){
   const got = BADGES.filter(b=>!S.badges.includes(b.id) && b.check());
@@ -480,6 +742,29 @@ function interleave(ids){
   return out;
 }
 function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+/* 入力式問題の答え合わせ。全角/半角・大文字小文字・カタカナ/ひらがな・記号のゆれを吸収したうえで比較する。
+   数値として読めるものは数値としても比較する（例："1.50" と "1.5" を同一視）。 */
+function normalizeAnswerText(s){
+  s = String(s).trim();
+  s = s.replace(/[Ａ-Ｚａ-ｚ０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0)-0xFEE0));
+  s = s.replace(/[－ー−‐]/g, "-");
+  s = s.replace(/．/g, ".");
+  s = s.replace(/[ァ-ヶ]/g, ch => String.fromCharCode(ch.charCodeAt(0)-0x60));
+  s = s.replace(/\s+/g, "");
+  return s.toLowerCase();
+}
+function answersMatch(input, correct, accept){
+  const ni = normalizeAnswerText(input);
+  if(ni === "") return false;
+  const candidates = [correct].concat(accept||[]).map(normalizeAnswerText);
+  for(const c of candidates){
+    if(ni === c) return true;
+    const nf = Number(ni), cf = Number(c);
+    if(!isNaN(nf) && !isNaN(cf) && c !== "" && Math.abs(nf-cf) < 1e-9) return true;
+  }
+  return false;
+}
 
 /* ============ 画面 ============ */
 const app = document.getElementById("app");
@@ -564,7 +849,16 @@ function renderHome(){
 window.toggleSound = ()=>{ S.sound=!S.sound; save(); renderHome(); };
 
 /* ---- 特訓（単元べつ） ---- */
+let trainSection = "unit";
+window.setTrainSection = (sec)=>{ trainSection = sec; renderTrain(); };
 function renderTrain(){
+  dojo = null;
+  const segRow = `<div class="segrow">
+    <button class="segbtn ${trainSection==="unit"?"active":""}" onclick="setTrainSection('unit')">📚 単元べつ特訓</button>
+    <button class="segbtn ${trainSection==="dojo"?"active":""}" onclick="setTrainSection('dojo')">🧘 修行の部屋</button>
+  </div>`;
+  if(trainSection==="dojo"){ renderDojoHome(segRow); return; }
+
   const units = {};
   BANK.forEach((q,i)=>{
     const k = q.s+"|"+q.u;
@@ -573,8 +867,8 @@ function renderTrain(){
   const bySub = {};
   Object.values(units).forEach(u=>{ (bySub[u.s]=bySub[u.s]||[]).push(u); });
 
-  app.innerHTML = `<h1 style="margin-bottom:12px">💪 単元べつ特訓</h1>
-    <div class="sub" style="margin-bottom:12px">苦手な単元をねらいうち。ここでの成績も復習スケジュールに反映されます。<br>🔒はまだ習っていない単元（タップで先取り学習もOK）。</div>` +
+  app.innerHTML = `<h1 style="margin-bottom:12px">💪 特訓</h1>` + segRow +
+    `<div class="sub" style="margin-bottom:12px">苦手な単元をねらいうち。ここでの成績も復習スケジュールに反映されます。<br>🔒はまだ習っていない単元（タップで先取り学習もOK）。</div>` +
     Object.entries(SUBJECTS).map(([key,sub])=>`
       <div class="card">
         <h2>${sub.emoji} ${sub.name}</h2>
@@ -605,6 +899,119 @@ window.startPractice = (s,u)=>{
   });
   startSession(shuffle(ids.slice(0,PRACTICE_SIZE)), `${SUBJECTS[s].name}・${u} 特訓`);
 };
+
+/* ---- 修行の部屋（基礎ドリル） ---- */
+function renderDojoHome(segRow){
+  const T = S.training;
+  const rows = Object.entries(DOJO_CATS).map(([key,cat])=>`
+    <button class="dojo-card" onclick="startDojo('${key}')">
+      <span class="dico">${cat.emoji}</span>
+      <div class="grow"><b>${cat.name}</b><div class="sub">これまでの正解数：${T[cat.statKey]}問</div></div>
+      <span>▶</span>
+    </button>`).join("");
+  app.innerHTML = `<h1 style="margin-bottom:12px">💪 特訓</h1>` + segRow +
+    `<div class="card">
+      <h2>🧘 修行の部屋</h2>
+      <div class="sub" style="margin-bottom:12px">考えずに、すぐ答えが浮かぶように。1回${DOJO_SIZE}問、テンポよく練習しよう。</div>
+      ${rows}
+    </div>
+    <div class="card sub center">修行セッション回数：${T.sessions}回</div>`;
+}
+function makeDojoQuestion(cat){
+  if(cat==="kanji"){
+    const item = KANJI_DRILL[Math.floor(Math.random()*KANJI_DRILL.length)];
+    return {q:`「${item.phrase}」の「${item.word}」の読み方は？`, ans:item.ans, hint:"ひらがなで入力"};
+  }
+  const p = makeCalcProblem(cat);
+  return {q:p.q, ans:p.ans, hint:"数字で入力"};
+}
+window.startDojo = (cat)=>{
+  dojo = {cat, i:0, correct:0, combo:0, gainedXp:0, answeredThisQ:false, currentType:"input", current:null};
+  nextDojoQuestion();
+};
+function nextDojoQuestion(){
+  if(dojo.i >= DOJO_SIZE){ finishDojo(); return; }
+  dojo.current = makeDojoQuestion(dojo.cat);
+  dojo.answeredThisQ = false;
+  const catInfo = DOJO_CATS[dojo.cat];
+  const pct = Math.round(dojo.i / DOJO_SIZE * 100);
+  app.innerHTML = `
+    <div class="row">
+      <button class="btn-ghost" onclick="quitDojo()">✕ やめる</button>
+      <div class="grow"></div>
+      <span class="pill">${catInfo.emoji} ${catInfo.name}</span>
+    </div>
+    <div class="progress"><div style="width:${pct}%"></div></div>
+    <div class="sub center">${dojo.i} / ${DOJO_SIZE} 問${dojo.combo>=2?` ｜ ⚡${dojo.combo}連続正解`:""}</div>
+    <div class="card" style="margin-top:12px">
+      <div class="qtext center">${esc(dojo.current.q)}</div>
+      <input type="text" id="ansIn" class="ans-input" placeholder="${dojo.current.hint}" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <button class="btn-main" onclick="answerDojo()">✅ こたえる</button>
+      <div id="fb"></div>
+    </div>
+    <div class="sub center">入力したらEnterキーでも答えられます</div>`;
+  const el = document.getElementById("ansIn");
+  if(el) el.focus();
+}
+window.quitDojo = ()=>{ if(confirm("修行を中断しますか？（ここまでの記録は保存済み）")){ dojo=null; go("train"); } };
+window.answerDojo = ()=>{
+  if(!dojo || dojo.answeredThisQ) return;
+  const el = document.getElementById("ansIn");
+  if(!el) return;
+  const val = el.value;
+  if(normalizeAnswerText(val)==="") { el.focus(); return; }
+  dojo.answeredThisQ = true;
+  const correct = answersMatch(val, dojo.current.ans);
+  el.disabled = true;
+  el.classList.add(correct?"correct":"wrong");
+  const btn = app.querySelector('button[onclick="answerDojo()"]');
+  if(btn) btn.disabled = true;
+
+  let fbHtml;
+  if(correct){
+    soundOK();
+    dojo.i++; dojo.correct++; dojo.combo++;
+    const xp = 2;
+    S.xp += xp; dojo.gainedXp += xp;
+    S.training[DOJO_CATS[dojo.cat].statKey]++;
+    if(dojo.combo > S.training.bestCombo) S.training.bestCombo = dojo.combo;
+    fbHtml = `<div class="feedback ok"><b>⭕ せいかい！ +${xp} XP</b></div>
+      <button class="btn-main" onclick="nextDojoQuestion()">次へ ▶</button>`;
+  }else{
+    soundNG();
+    dojo.combo = 0;
+    dojo.i++;
+    fbHtml = `<div class="feedback ng"><b>❌ 正解は「${esc(dojo.current.ans)}」</b></div>
+      <button class="btn-main" onclick="nextDojoQuestion()">次へ ▶</button>`;
+  }
+  save();
+  document.getElementById("fb").innerHTML = fbHtml;
+  ensureNextVisible();
+};
+function finishDojo(){
+  S.training.sessions++;
+  updateStreak();
+  const newBadges = checkNewBadges();
+  save();
+  if(newBadges.length) soundLv();
+  const acc = Math.round(dojo.correct/DOJO_SIZE*100);
+  const catInfo = DOJO_CATS[dojo.cat];
+  const doneDojo = dojo; dojo = null;
+  app.innerHTML = `
+    <div class="card center">
+      <div class="result-emoji">${acc===100?"🏆":acc>=70?"🎉":"💪"}</div>
+      <h1>${catInfo.name} 修行クリア！</h1>
+      <div class="stat3">
+        <div><div class="v" style="color:var(--gold)">+${doneDojo.gainedXp}</div><div class="k">獲得XP</div></div>
+        <div><div class="v">${acc}%</div><div class="k">正答率</div></div>
+        <div><div class="v">⚡${S.training.bestCombo}</div><div class="k">最大連続正解</div></div>
+      </div>
+      ${newBadges.map(b=>`<div class="feedback ok" style="margin-bottom:10px"><b>${b.emoji} バッジ獲得「${b.name}」</b><br><span class="sub">${b.desc}</span></div>`).join("")}
+      <button class="btn-main" onclick="startDojo('${doneDojo.cat}')">🔥 もう1回修行する</button>
+      <button class="btn-sub" onclick="setTrainSection('dojo')">修行の部屋にもどる</button>
+    </div>`;
+  nav("train");
+}
 
 /* ---- クエスト開始 ---- */
 window.startQuest = ()=>{
@@ -643,9 +1050,9 @@ function nextQuestion(){
   const id = sess.queue[0];
   const q = BANK[id];
   const sub = SUBJECTS[q.s];
-  // 選択肢シャッフル（c[0]が正解）
-  const order = shuffle([0,1,2,3]);
-  sess.currentOrder = order;
+  const isInput = q.t === "input";
+  sess.currentOrder = isInput ? null : shuffle([0,1,2,3]);
+  sess.currentType = isInput ? "input" : "choice";
   sess.answeredThisQ = false;
 
   const pct = Math.round(sess.cleared.size / sess.total * 100);
@@ -664,27 +1071,62 @@ function nextQuestion(){
         ${S.items[id]?'<span class="duechip">🔁 復習</span>':'<span class="duechip">✨ 新問題</span>'}
       </div>
       <div class="qtext">${esc(q.q)}</div>
+      ${isInput ? `
+      <input type="text" id="ansIn" class="ans-input" placeholder="答えを入力" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <button class="btn-main" onclick="answerInput()">✅ こたえる</button>
+      ` : `
       <div id="choices">
-        ${order.map((ci,pos)=>`<button class="choice" id="ch${pos}" onclick="answer(${pos})">${"❶❷❸❹"[pos]} ${esc(q.c[ci])}</button>`).join("")}
-      </div>
+        ${sess.currentOrder.map((ci,pos)=>`<button class="choice" id="ch${pos}" onclick="answer(${pos})">${"❶❷❸❹"[pos]} ${esc(q.c[ci])}</button>`).join("")}
+      </div>`}
       <div id="fb"></div>
     </div>
-    <div class="sub center">キーボードの 1〜4 でも答えられます</div>`;
+    <div class="sub center">${isInput?"入力したらEnterキーでも答えられます":"キーボードの 1〜4 でも答えられます"}</div>`;
+  if(isInput){ const el=document.getElementById("ansIn"); if(el) el.focus(); }
 }
 window.quitSession = ()=>{ if(confirm("クエストを中断しますか？（ここまでの記録は保存済み）")) go("home"); };
+
+/* 正誤確定後の共通処理（XP・復習スケジュール・セッション状態の更新）。選択式・入力式の両方から呼ばれる。 */
+function settleAnswer(id, correct){
+  const q = BANK[id];
+  const wasWrongBefore = sess.wrongOnce.has(id);
+  const wasReview = !!S.items[id];
+  S.answered++;
+  let html;
+  if(correct){
+    soundOK();
+    const xp = wasWrongBefore ? 5 : 10;
+    S.xp += xp; sess.gainedXp += xp; S.correct++;
+    if(!wasWrongBefore){ sess.firstTryCorrect++; if(q.t==="input") S.inputCorrect++; }
+    if(wasReview && !wasWrongBefore) S.reviewDone++;
+    sess.cleared.add(id);
+    scheduleAnswer(id, !wasWrongBefore, wasWrongBefore);
+    const st = S.items[id];
+    const days = INTERVALS[st.stage];
+    html = `<div class="feedback ok"><b>⭕ 正解！ +${xp} XP</b><br>${esc(q.e)}<br>
+      <span class="sub">📅 次の復習：${days===0?"今日中":days+"日後"}（思い出す間隔を少しずつ広げると記憶が長持ちします）</span></div>
+      <button class="btn-main" onclick="nextQuestion()">次へ ▶</button>`;
+  }else{
+    soundNG();
+    sess.wrongOnce.add(id);
+    sess.queue.push(id); // セッションの最後に再挑戦（正解するまで終わらない）
+    scheduleAnswer(id, false, false);
+    const correctText = q.t==="input" ? q.ans : q.c[0];
+    html = `<div class="feedback ng"><b>❌ ざんねん…正解は「${esc(correctText)}」</b><br>${esc(q.e)}<br>
+      <span class="sub">🔁 この問題はクエストの最後にもう一度出ます。自力で思い出せたら記憶に残ります！</span></div>
+      <button class="btn-main" onclick="nextQuestion()">次へ ▶</button>`;
+  }
+  save();
+  return html;
+}
 
 window.answer = (pos)=>{
   if(!sess || sess.answeredThisQ) return;
   sess.answeredThisQ = true;
   const id = sess.queue.shift();
-  const q = BANK[id];
   const chosen = sess.currentOrder[pos];
   const correct = (chosen === 0);
   const correctPos = sess.currentOrder.indexOf(0);
-  const wasWrongBefore = sess.wrongOnce.has(id);
-  const wasReview = !!S.items[id];
 
-  // ボタンの見た目更新
   for(let p=0;p<4;p++){
     const el = document.getElementById("ch"+p);
     el.disabled = true;
@@ -693,34 +1135,29 @@ window.answer = (pos)=>{
     else el.classList.add("dim");
   }
 
-  let fbHtml;
-  if(correct){
-    soundOK();
-    const xp = wasWrongBefore ? 5 : 10;
-    S.xp += xp; sess.gainedXp += xp;
-    S.answered++; S.correct++;
-    if(!wasWrongBefore) sess.firstTryCorrect++;
-    if(wasReview && !wasWrongBefore) S.reviewDone++;
-    sess.cleared.add(id);
-    scheduleAnswer(id, !wasWrongBefore, wasWrongBefore);
-    const st = S.items[id];
-    const days = INTERVALS[st.stage];
-    fbHtml = `<div class="feedback ok"><b>⭕ 正解！ +${xp} XP</b><br>${esc(q.e)}<br>
-      <span class="sub">📅 次の復習：${days===0?"今日中":days+"日後"}（思い出す間隔を少しずつ広げると記憶が長持ちします）</span></div>
-      <button class="btn-main" onclick="nextQuestion()">次へ ▶</button>`;
-  }else{
-    soundNG();
-    S.answered++;
-    sess.wrongOnce.add(id);
-    sess.queue.push(id); // セッションの最後に再挑戦（正解するまで終わらない）
-    scheduleAnswer(id, false, false);
-    fbHtml = `<div class="feedback ng"><b>❌ ざんねん…正解は「${esc(q.c[0])}」</b><br>${esc(q.e)}<br>
-      <span class="sub">🔁 この問題はクエストの最後にもう一度出ます。自力で思い出せたら記憶に残ります！</span></div>
-      <button class="btn-main" onclick="nextQuestion()">次へ ▶</button>`;
-  }
-  save();
+  const fbHtml = settleAnswer(id, correct);
   const fbEl = document.getElementById("fb");
   fbEl.innerHTML = fbHtml;
+  ensureNextVisible();
+};
+
+window.answerInput = ()=>{
+  if(!sess || sess.answeredThisQ) return;
+  const el = document.getElementById("ansIn");
+  if(!el) return;
+  const val = el.value;
+  if(normalizeAnswerText(val)===""){ el.focus(); return; }
+  sess.answeredThisQ = true;
+  const id = sess.queue.shift();
+  const q = BANK[id];
+  const correct = answersMatch(val, q.ans, q.accept);
+  el.disabled = true;
+  el.classList.add(correct?"correct":"wrong");
+  const btn = app.querySelector('button[onclick="answerInput()"]');
+  if(btn) btn.disabled = true;
+
+  const fbHtml = settleAnswer(id, correct);
+  document.getElementById("fb").innerHTML = fbHtml;
   ensureNextVisible();
 };
 
@@ -750,13 +1187,32 @@ document.addEventListener("keydown",(ev)=>{
     }
     return;
   }
-  if(!sess) return;
-  if(ev.key>="1" && ev.key<="4" && !sess.answeredThisQ){
-    const el = document.getElementById("ch"+(Number(ev.key)-1));
-    if(el) window.answer(Number(ev.key)-1);
-  }else if(ev.key==="Enter" && sess.answeredThisQ){
-    ev.preventDefault(); // フォーカス中の古いボタンへのclick発火を防ぐ（進行不能・二重回答対策）
-    nextQuestion();
+  if(sess){
+    if(sess.currentType==="input"){
+      if(ev.key==="Enter"){
+        ev.preventDefault();
+        if(!sess.answeredThisQ) window.answerInput();
+        else nextQuestion();
+      }
+      return; // 数字キーは入力欄への通常入力にまかせる（1〜4ショートカットを無効化）
+    }
+    if(ev.key>="1" && ev.key<="4" && !sess.answeredThisQ){
+      const el = document.getElementById("ch"+(Number(ev.key)-1));
+      if(el) window.answer(Number(ev.key)-1);
+    }else if(ev.key==="Enter" && sess.answeredThisQ){
+      ev.preventDefault(); // フォーカス中の古いボタンへのclick発火を防ぐ（進行不能・二重回答対策）
+      nextQuestion();
+    }
+    return;
+  }
+  if(dojo){
+    if(dojo.currentType==="input"){
+      if(ev.key==="Enter"){
+        ev.preventDefault();
+        if(!dojo.answeredThisQ) window.answerDojo();
+        else nextDojoQuestion();
+      }
+    }
   }
 });
 window.nextQuestion = nextQuestion;
@@ -800,24 +1256,44 @@ function finishSession(){
 
 /* ---- バトルモード ---- */
 let btl = null;
+let dojo = null; // 修行の部屋（基礎ドリル）の進行状態
 
+let battleShowAll = false;
+window.toggleBattleAll = ()=>{ battleShowAll = !battleShowAll; renderBattle(); };
+function monsterRowHtml(m,i,B){
+  const beaten = i < B.stage;
+  const current = i === B.stage;
+  const locked = i > B.stage;
+  const weakTxt = m.weak ? `よわ点: ${SUBJECTS[m.weak].emoji}${SUBJECTS[m.weak].name}` : "よわ点なし";
+  if(locked) return `<div class="monster-row locked"><span class="memoji">❓</span><div class="grow"><b>？？？</b><div class="sub">前のモンスターを倒すと登場</div></div>🔒</div>`;
+  return `<button class="monster-row ${beaten?"beaten":""}" onclick="startBattle(${i})">
+    <span class="memoji">${m.emoji}</span>
+    <div class="grow"><b>${m.name} <span class="sub">Lv.${m.lv}</span></b>
+      <div class="sub">HP ${m.hp}｜${weakTxt}</div></div>
+    <span>${beaten?"✅ 再戦":current?"⚔️ 挑戦！":""}</span>
+  </button>`;
+}
 function renderBattle(){
   btl = null;
   const B = S.battle;
   const allClear = B.stage >= MONSTERS.length;
-  const rows = MONSTERS.map((m,i)=>{
-    const beaten = i < B.stage;
-    const current = i === B.stage;
-    const locked = i > B.stage;
-    const weakTxt = m.weak ? `よわ点: ${SUBJECTS[m.weak].emoji}${SUBJECTS[m.weak].name}` : "よわ点なし";
-    if(locked) return `<div class="monster-row locked"><span class="memoji">❓</span><div class="grow"><b>？？？</b><div class="sub">前のモンスターを倒すと登場</div></div>🔒</div>`;
-    return `<button class="monster-row ${beaten?"beaten":""}" onclick="startBattle(${i})">
-      <span class="memoji">${m.emoji}</span>
-      <div class="grow"><b>${m.name} <span class="sub">Lv.${m.lv}</span></b>
-        <div class="sub">HP ${m.hp}｜${weakTxt}</div></div>
-      <span>${beaten?"✅ 再戦":current?"⚔️ 挑戦！":""}</span>
-    </button>`;
-  }).join("");
+  const pct = Math.round(B.stage/MONSTERS.length*100);
+
+  let rows, tail = "";
+  if(battleShowAll || MONSTERS.length <= 15){
+    rows = MONSTERS.map((m,i)=>monsterRowHtml(m,i,B)).join("");
+    if(MONSTERS.length > 15) tail = `<button class="btn-sub" onclick="toggleBattleAll()">▲ コンパクト表示にもどす</button>`;
+  }else{
+    // 直近で倒した3体＋今の相手＋つぎの2体だけを表示し、残りはまとめて表示（100体表示によるもたつき・冗長な🔒行を避ける）
+    const from = Math.max(0, B.stage-3), to = Math.min(MONSTERS.length, B.stage+3);
+    const hiddenBeaten = from;
+    const hiddenLocked = MONSTERS.length - to;
+    rows = "";
+    if(hiddenBeaten>0) rows += `<div class="lockcount">✅ これまでに ${hiddenBeaten}体のモンスターを撃破ずみ</div>`;
+    for(let i=from;i<to;i++) rows += monsterRowHtml(MONSTERS[i],i,B);
+    if(hiddenLocked>0) rows += `<div class="lockcount">🔒 このあと ${hiddenLocked}体のモンスターが挑戦を待っている…</div>`;
+    tail = `<button class="btn-sub" onclick="toggleBattleAll()">▼ 図鑑を100体すべて表示（再戦もできます）</button>`;
+  }
 
   app.innerHTML = `
     <h1 style="margin-bottom:12px">⚔️ まなびバトル</h1>
@@ -828,18 +1304,24 @@ function renderBattle(){
       ✨ モンスターの<b>弱点教科</b>の問題で正解すると<b>2倍ダメージ</b>！<br>
       バトル中の問題も、ふだんの復習スケジュールにちゃんと記録されます。</div>
     </div>
-    ${allClear?`<div class="card center"><div class="result-emoji">👑</div><b>全モンスター制覇！まなびチャンピオン！</b><div class="sub" style="margin-top:6px">再戦していつでも腕だめしできます</div></div>`:""}
+    <div class="card">
+      <div class="row" style="margin-bottom:6px"><b>撃破数</b><div class="grow"></div><span class="sub">${B.stage} / ${MONSTERS.length}体</span></div>
+      <div class="xpbar"><div style="width:${pct}%"></div></div>
+    </div>
+    ${allClear?`<div class="card center"><div class="result-emoji">👑</div><b>全100体制覇！まなびチャンピオン！</b><div class="sub" style="margin-top:6px">再戦していつでも腕だめしできます</div></div>`:""}
     <div class="card">
       <h2>😈 モンスター図鑑</h2>
       ${rows}
+      ${tail}
     </div>
     <div class="card sub center">これまでの戦績：${B.wins}勝 ${B.losses}敗｜最大コンボ ⚡${B.maxCombo}</div>`;
 }
 
 function battleQueue(){
-  // 出題対象は習った単元のみ。復習期限が来ている問題を優先的に混ぜる
-  const due = shuffle(dueIds().filter(i=>unitUnlocked(BANK[i].s,BANK[i].u)));
-  const rest = shuffle(BANK.map((_,i)=>i).filter(i=>unitUnlocked(BANK[i].s,BANK[i].u) && !due.includes(i)));
+  // 出題対象は習った単元・4択形式のみ（入力式問題はバトルのUIに合わないため除外）。復習期限が来ている問題を優先的に混ぜる
+  const battleEligible = i => BANK[i].t!=="input" && unitUnlocked(BANK[i].s,BANK[i].u);
+  const due = shuffle(dueIds().filter(battleEligible));
+  const rest = shuffle(BANK.map((_,i)=>i).filter(i=>battleEligible(i) && !due.includes(i)));
   return interleave(due.slice(0,15).concat(rest.slice(0,25)));
 }
 
@@ -1073,6 +1555,10 @@ function renderScience(){
 
     <h3>7. カリキュラム連動 — 習ったところから出題</h3>
     <p>学校の授業進度（前期後期制・標準的な教科書の年間計画）に合わせて、<b>いま習っている範囲までの単元</b>だけが今日のクエストに登場します（現在：${termName()}・〜${monthLabel(schoolMonth())}）。授業で習う→その日のうちにクイズで思い出す、が最強の組み合わせです。未習単元は「特訓」タブから先取りもできます。</p>
+
+    <h3>8. 修行の部屋 — 自動化（考えなくても解ける状態）をつくる</h3>
+    <p>二桁の足し算・引き算、九九、漢字の読みなどの基礎は、いちいち考えて解いているうちは本番で時間が足りなくなります。<b>反応が自動化するまで反復する</b>ことで、頭を「考える部分」に使う余裕が生まれます。「特訓」タブの中の「修行の部屋」では、これらを入力式でテンポよく反復練習できます。</p>
+    <cite>Logan (1988) の自動化理論／流暢性（フルーエンシー）研究：基礎処理の自動化は上位の思考課題の成績を高める</cite>
 
     <h3>📚 収録範囲（中学1年）</h3>
     <p>数学（正負の数・文字と式・一次方程式・比例と反比例・平面図形・空間図形・データの活用）／英語（be動詞・一般動詞・疑問詞・命令文とcan・名詞と代名詞・三単現・現在進行形・過去形）／国語（漢字・文法・語彙）／理科（植物・物質・光音力・大地）／社会（世界の姿・気候と暮らし・歴史 古代〜鎌倉）— 全${BANK.length}問</p>
