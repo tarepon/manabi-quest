@@ -474,10 +474,10 @@ function termName(){ return schoolMonth() <= 6 ? "前期" : "後期"; }
 function monthLabel(sm){ return ((sm+2)%12+1) + "月"; }
 function unitUnlocked(s,u){ const sm = CURRICULUM[s+"|"+u]; return sm===undefined || sm <= schoolMonth(); }
 
-/* ============ バトルモード（勉強のじゃまをするモンスターたち） ============ */
-/* 正解＝こうげき、まちがい＝反撃を受ける。弱点教科の問題で正解すると2倍ダメージ。
+/* ============ バトルモード（ポケモン風・手持ちモンスターバトル） ============ */
+/* 正解＝わざを選んでこうげき、まちがい＝出撃中のモンスターが反撃を受ける。
+   タイプ相性で技の通りやすさが変わり、通常モンスターは倒すとなかまにできる。
    バトル中の解答もふつうのクエストと同じく復習スケジュールに記録される。 */
-const PLAYER_HP = 30;
 
 /* 100体構成：9種のふつうモンスター×10段階（ウェーブ）＋各ウェーブ末尾のウェーブボス10体＝100体。
    段階が進むほどHP・こうげき力が上がり、弱点教科も5教科を均等に巡回する。 */
@@ -492,6 +492,39 @@ const MONSTER_SPECIES = [
   {emoji:"🦉", base:"ヨフカシフクロウ", weak:"sci",  line:"「夜ふかしすれば記憶は消えるホゥ」"},
   {emoji:"😈", base:"テストデーモン",   weak:"jpn",  line:"「テスト本番でまっしろにしてやろう」"},
 ];
+/* ============ タイプ相性（5教科を五角形の相性表に）============
+   math→sci→soc→eng→jpn→math の順に「一つ先のタイプに強い」。
+   例：数学タイプの技は理科タイプの相手に1.5倍、逆に理科タイプは数学タイプに0.6倍しか通らない。
+   2つ離れたタイプ同士は無関係（等倍）。 */
+const TYPE_ORDER = ["math","sci","soc","eng","jpn"];
+function nextType(t){ const i = TYPE_ORDER.indexOf(t); return i<0 ? null : TYPE_ORDER[(i+1)%TYPE_ORDER.length]; }
+function typeFromWeak(weak){ return weak ? nextType(weak) : null; } // 旧「弱点教科」から、そのモンスター自身のタイプを逆算する
+function typeMultiplier(atkType, defType){
+  if(!atkType || !defType) return 1;
+  const ai = TYPE_ORDER.indexOf(atkType), di = TYPE_ORDER.indexOf(defType);
+  const diff = (di - ai + TYPE_ORDER.length) % TYPE_ORDER.length;
+  if(diff===1) return 1.5; // atkTypeがdefTypeに強い
+  if(diff===TYPE_ORDER.length-1) return 0.6; // defTypeがatkTypeに強い（あまり通らない）
+  return 1;
+}
+/* 教科タイプに対応する「技」。手持ちモンスターは自分のタイプの技＋そのタイプが得意とする技の2つを覚える。 */
+const MOVES = {
+  math:{type:"math", name:"ロジックパンチ",       emoji:"🧮"},
+  sci: {type:"sci",  name:"げんりレーザー",       emoji:"🔬"},
+  soc: {type:"soc",  name:"れきしのいかり",       emoji:"🌏"},
+  eng: {type:"eng",  name:"ボキャブラリービーム", emoji:"🗣️"},
+  jpn: {type:"jpn",  name:"ことだまアタック",     emoji:"📖"},
+};
+function movesForType(type){
+  if(!type) return [MOVES.jpn, MOVES.math];
+  return [MOVES[type], MOVES[nextType(type)]];
+}
+/* なかまにしたときの名前（前向きな姿へ進化する）。野生時の階級プレフィックスは外れる。 */
+const CAPTURE_NAME = {
+  "ワスレムシ":"オボエムシ", "サボリーヌ":"ガンバリーヌ", "ネムネムダケ":"パッチリダケ",
+  "ケアレスウルフ":"チェックウルフ", "ダラダラゾンビ":"キビキビゾンビ", "マルアンキロボ":"リカイロボ",
+  "ニガテドラゴン":"トクイドラゴン", "ヨフカシフクロウ":"アサガタフクロウ", "テストデーモン":"テストヒーロー",
+};
 const TIER_PREFIX = ["ちび","","げんきな","すばやい","したたかな","じゅくれんの","きょうぼうな","でんせつの","こんじょうの","おうごんの"];
 const WAVE_BOSSES = [
   {emoji:"👹", name:"忘却の見張り番",       weak:"math", line:"「ここから先は、忘れたものだけ通す」"},
@@ -518,7 +551,10 @@ function buildMonsters(){
         hp: 35 + Math.round(k*1.3),
         atk: 6 + Math.floor(k/12),
         weak: sp.weak,
+        type: typeFromWeak(sp.weak),
         line: sp.line,
+        speciesBase: sp.base, // なかまにしたときの名前引きに使う（階級プレフィックスを除いた元の種族名）
+        capturable: true,
       });
     }
     const boss = WAVE_BOSSES[wave];
@@ -530,7 +566,9 @@ function buildMonsters(){
       hp: 55 + Math.round(k*1.6),
       atk: 8 + Math.floor(k/10),
       weak: boss.weak,
+      type: typeFromWeak(boss.weak),
       line: boss.line,
+      capturable: false, // ウェーブボスはなかまにできない（毎ウェーブの節目のガチ勝負）
     });
   }
   return arr;
@@ -539,11 +577,11 @@ function buildMonsters(){
    HPとこうげき力が通常のラスボスをはるかに超える。既存のstage進行の仕組みをそのまま使うため、
    通常のMONSTERS配列の末尾に連結するだけでよい（ロック・出現の仕組みは変更不要）。 */
 const SECRET_BOSSES = [
-  {emoji:"🌪️", name:"ゴッチャニガテスパイラル", weak:null, lv:150, hp:350, atk:20, secret:true,
+  {emoji:"🌪️", name:"ゴッチャニガテスパイラル", weak:null, type:null, lv:150, hp:350, atk:20, secret:true, capturable:false,
     line:"「ぜんぶの教科が、いっしょくたに ぐるぐるするだろ？」"},
-  {emoji:"🕳️", name:"ムゲンサボリアビス",       weak:null, lv:180, hp:450, atk:23, secret:true,
+  {emoji:"🕳️", name:"ムゲンサボリアビス",       weak:null, type:null, lv:180, hp:450, atk:23, secret:true, capturable:false,
     line:"「あと5分…が、えいえんに つづく」"},
-  {emoji:"💀", name:"真・ボウキャクキング",      weak:null, lv:220, hp:600, atk:28, secret:true,
+  {emoji:"💀", name:"真・ボウキャクキング",      weak:null, type:null, lv:220, hp:600, atk:28, secret:true, capturable:false,
     line:"「わすれることこそ、げんじつだ」"},
 ];
 const MONSTERS = buildMonsters().concat(SECRET_BOSSES);
@@ -642,6 +680,27 @@ if(typeof S.battle.secretNoHitWins !== "number") S.battle.secretNoHitWins = 0;
 if(!S.training) S.training = {sessions:0, addCorrect:0, subCorrect:0, mulCorrect:0, kanjiCorrect:0, bestCombo:0, perfectSessions:0};
 if(typeof S.training.perfectSessions !== "number") S.training.perfectSessions = 0;
 if(typeof S.inputCorrect !== "number") S.inputCorrect = 0;
+
+/* ============ 手持ちモンスター（ポケモン風バトル）============
+   最大3体。レベルはXPから逆算（保存はxpのみ）、個体値(iv)はなかまにした瞬間に1回だけ振られる
+   ―同じ種族でも再戦のたびに違う個体値のものをゲットできる。HPはバトル開始のたびに全回復する。 */
+const STARTER_TEMPLATE = {emoji:"🐥", name:"マナビー", type:"jpn", speciesBase:"マナビー"};
+function makeMonsterInstance(o){
+  S.nextMonsterId = (S.nextMonsterId||0) + 1;
+  return {
+    id: S.nextMonsterId,
+    emoji: o.emoji, name: o.name, type: o.type, speciesBase: o.speciesBase || o.name,
+    xp: 0,
+    iv: {hp: Math.floor(Math.random()*16), atk: Math.floor(Math.random()*16)},
+  };
+}
+function monsterLevel(inst){ return 1 + Math.floor(inst.xp/15); }
+function monsterMaxHp(inst){ return 22 + monsterLevel(inst)*4 + inst.iv.hp; }
+function monsterAtk(inst){ return 5 + Math.floor(monsterLevel(inst)*0.8) + Math.floor(inst.iv.atk/3); }
+if(!S.team || !S.team.members || !S.team.members.length){
+  S.team = {members:[makeMonsterInstance(STARTER_TEMPLATE)], activeIndex:0};
+}
+if(typeof S.team.activeIndex !== "number" || S.team.activeIndex<0 || S.team.activeIndex>=S.team.members.length) S.team.activeIndex = 0;
 function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
 function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 
@@ -717,6 +776,8 @@ const BADGES = [
   {id:"secret3", emoji:"💀", name:"絶対忘却を打ち破る者", desc:"すべての隠しボスを倒し、真の完全制覇を果たす", check:()=>S.battle.stage>=MONSTERS.length},
   {id:"nohit",   emoji:"💥", name:"ノーダメージの覇者", desc:"隠しボスにノーダメージで勝利する",     check:()=>S.battle.secretNoHitWins>=1},
   {id:"dojop3",  emoji:"🔥", name:"修行の鬼",       desc:"修行の部屋で全問正解（パーフェクト）を3回達成する", check:()=>S.training.perfectSessions>=3},
+  {id:"catch1",  emoji:"🎣", name:"はじめての仲間", desc:"バトルでモンスターをはじめてなかまにする",       check:()=>S.team.members.length>=2},
+  {id:"fullparty", emoji:"🎒", name:"フルパーティ", desc:"手持ちモンスターを3体そろえる",                 check:()=>S.team.members.length>=3},
 ];
 function checkNewBadges(){
   const got = BADGES.filter(b=>!S.badges.includes(b.id) && b.check());
@@ -1293,12 +1354,13 @@ function monsterRowHtml(m,i,B){
   const beaten = i < B.stage;
   const current = i === B.stage;
   const locked = i > B.stage;
-  const weakTxt = m.weak ? `よわ点: ${SUBJECTS[m.weak].emoji}${SUBJECTS[m.weak].name}` : "よわ点なし";
+  const typeTxt = m.type ? `タイプ: ${SUBJECTS[m.type].emoji}${SUBJECTS[m.type].name}` : "タイプ: なし（無属性）";
+  const tag = m.secret ? "｜<b style=\"color:#c026d3\">ゲキムズ</b>" : m.capturable ? "｜🎣 なかまにできる" : "｜強敵（なかま不可）";
   if(locked) return `<div class="monster-row locked"><span class="memoji">❓</span><div class="grow"><b>？？？</b><div class="sub">前のモンスターを倒すと登場</div></div>🔒</div>`;
   return `<button class="monster-row ${beaten?"beaten":""} ${m.secret?"secret":""}" onclick="startBattle(${i})">
     <span class="memoji">${m.emoji}</span>
     <div class="grow"><b>${m.secret?"⚠️ ":""}${m.name} <span class="sub">Lv.${m.lv}</span></b>
-      <div class="sub">HP ${m.hp}｜${weakTxt}${m.secret?"｜<b style=\"color:#c026d3\">ゲキムズ</b>":""}</div></div>
+      <div class="sub">HP ${m.hp}｜${typeTxt}${tag}</div></div>
     <span>${beaten?"✅ 再戦":current?"⚔️ 挑戦！":""}</span>
   </button>`;
 }
@@ -1326,16 +1388,20 @@ function renderBattle(){
     tail = `<button class="btn-sub" onclick="toggleBattleAll()">▼ 図鑑を${MONSTERS.length}体すべて表示（再戦もできます）</button>`;
   }
 
+  const lead = S.team.members[S.team.activeIndex] || S.team.members[0];
+
   app.innerHTML = `
     <h1 style="margin-bottom:12px">⚔️ まなびバトル</h1>
     <div class="card">
       <div class="sub" style="line-height:1.8">勉強のじゃまをするモンスターがあらわれた！<br>
-      ⭕ <b>正解するとこうげき</b>（連続正解でコンボダメージUP）<br>
-      ❌ <b>まちがえると反撃</b>を受ける（きみのHPは${PLAYER_HP}）<br>
-      ✨ モンスターの<b>弱点教科</b>の問題で正解すると<b>2倍ダメージ</b>！<br>
+      ⭕ <b>正解すると、わざを1つ選んでこうげき</b>（連続正解でコンボダメージUP）<br>
+      ❌ <b>まちがえると出撃中のモンスターが反撃</b>を受ける。ひんしになったら手持ちから交代！<br>
+      🌀 <b>タイプ相性</b>：数学→理科→社会→英語→国語→数学…の順に、一つ先のタイプに1.5倍・逆は0.6倍<br>
+      🎣 通常のモンスターは倒すと<b>なかまにできる</b>（最大3体、個体値はゲットのたびにランダム）<br>
       バトル中の問題も、ふだんの復習スケジュールにちゃんと記録されます。</div>
     </div>
-    <div class="card">
+    <button class="btn-sub" onclick="viewTeam()">🎒 手持ちを見る（先頭：${lead.emoji} ${esc(lead.name)} Lv.${monsterLevel(lead)}）</button>
+    <div class="card" style="margin-top:10px">
       <div class="row" style="margin-bottom:6px"><b>撃破数</b><div class="grow"></div><span class="sub">${B.stage} / ${MONSTERS.length}体</span></div>
       <div class="xpbar"><div style="width:${pct}%"></div></div>
     </div>
@@ -1346,7 +1412,7 @@ function renderBattle(){
       ${rows}
       ${tail}
     </div>
-    <div class="card sub center">これまでの戦績：${B.wins}勝 ${B.losses}敗｜最大コンボ ⚡${B.maxCombo}</div>`;
+    <div class="card sub center">これまでの戦績：${B.wins}勝 ${B.losses}敗｜最大コンボ ⚡${B.maxCombo}｜手持ち ${S.team.members.length}/3体</div>`;
 }
 
 function battleQueue(){
@@ -1359,10 +1425,14 @@ function battleQueue(){
 
 window.startBattle = (mi)=>{
   const m = MONSTERS[mi];
-  btl = {mi, m, ehp:m.hp, php:PLAYER_HP, queue:battleQueue(), combo:0,
-         gainedXp:0, answeredThisQ:false, currentOrder:null, next:null};
+  const teamHp = {};
+  S.team.members.forEach(t=>{ teamHp[t.id] = monsterMaxHp(t); });
+  const activeId = (S.team.members[S.team.activeIndex] || S.team.members[0]).id;
+  btl = {mi, m, ehp:m.hp, teamHp, activeId, queue:battleQueue(), combo:0,
+         gainedXp:0, answeredThisQ:false, currentOrder:null, next:null, tookDamage:false};
   nextBattleQuestion();
 };
+function activeMember(){ return S.team.members.find(t=>t.id===btl.activeId); }
 
 function hpClass(cur,max){ const r=cur/max; return r<=0.25?"danger":r<=0.5?"low":""; }
 
@@ -1372,15 +1442,21 @@ function nextBattleQuestion(){
   const q = BANK[id];
   const sub = SUBJECTS[q.s];
   const m = btl.m;
+  const inst = activeMember();
+  const maxHp = monsterMaxHp(inst);
+  const moves = movesForType(inst.type);
   btl.currentOrder = shuffle([0,1,2,3]);
   btl.answeredThisQ = false;
   btl.next = null;
-  const weakChip = m.weak===q.s ? `<span class="pill" style="border-color:var(--gold);color:var(--gold)">✨ 弱点教科！</span>` : "";
+  const typeChip = m.type
+    ? `<span class="pill" style="border-color:${SUBJECTS[m.type].color};color:${SUBJECTS[m.type].color}">${SUBJECTS[m.type].emoji} ${SUBJECTS[m.type].name}タイプ</span>`
+    : `<span class="pill">無属性</span>`;
 
   app.innerHTML = `
     <div class="row">
       <button class="btn-ghost" onclick="quitBattle()">✕ にげる</button>
       <div class="grow"></div>
+      ${S.team.members.length>1?'<button class="btn-ghost" onclick="openSwitch()">🔄 交代</button>':""}
       ${m.secret?'<span class="pill" style="border-color:#c026d3;color:#c026d3">⚠️ ゲキムズ</span>':""}
       ${btl.combo>=2?`<span class="combo-chip">⚡${btl.combo}コンボ中</span>`:""}
     </div>
@@ -1388,22 +1464,23 @@ function nextBattleQuestion(){
       <div class="row">
         <div class="monster-emoji" id="mob" style="font-size:52px">${m.emoji}</div>
         <div class="grow">
-          <div class="row"><b>${m.name}</b><span class="sub">Lv.${m.lv}</span><div class="grow"></div><span class="sub" id="ehptxt">${btl.ehp}/${m.hp}</span></div>
+          <div class="row"><b>${m.name}</b><span class="sub">Lv.${m.lv}</span><div class="grow"></div>${typeChip}</div>
+          <div class="row"><div class="grow"></div><span class="sub" id="ehptxt">${btl.ehp}/${m.hp}</span></div>
           <div class="hpbar${m.secret?" secret-hp":""}"><div id="ehp" class="${hpClass(btl.ehp,m.hp)}" style="width:${Math.round(btl.ehp/m.hp*100)}%"></div></div>
         </div>
       </div>
       <div class="row" style="margin-top:10px" id="player">
-        <span style="font-size:24px">🧑‍🎓</span>
+        <span style="font-size:24px">${inst.emoji}</span>
         <div class="grow">
-          <div class="row"><b style="font-size:13px">あなた</b><div class="grow"></div><span class="sub" id="phptxt">${btl.php}/${PLAYER_HP}</span></div>
-          <div class="hpbar"><div id="php" class="${hpClass(btl.php,PLAYER_HP)}" style="width:${Math.round(btl.php/PLAYER_HP*100)}%"></div></div>
+          <div class="row"><b style="font-size:13px">${esc(inst.name)}</b><span class="sub">Lv.${monsterLevel(inst)}</span><div class="grow"></div><span class="sub" id="phptxt">${btl.teamHp[inst.id]}/${maxHp}</span></div>
+          <div class="hpbar"><div id="php" class="${hpClass(btl.teamHp[inst.id],maxHp)}" style="width:${Math.round(btl.teamHp[inst.id]/maxHp*100)}%"></div></div>
+          <div class="sub" style="margin-top:2px">つかえるわざ：${moves.map(mv=>`${mv.emoji}${mv.name}`).join(" ／ ")}</div>
         </div>
       </div>
     </div>
     <div class="card" style="margin-top:4px">
       <div class="row">
         <span class="pill" style="border-color:${sub.color};color:${sub.color}">${sub.emoji} ${sub.name}｜${esc(q.u)}</span>
-        <div class="grow"></div>${weakChip}
       </div>
       <div class="qtext">${esc(q.q)}</div>
       <div id="choices">
@@ -1411,7 +1488,7 @@ function nextBattleQuestion(){
       </div>
       <div id="fb"></div>
     </div>
-    <div class="sub center">正解でこうげき！キーボードの 1〜4 でも答えられます</div>`;
+    <div class="sub center">正解でわざを選んでこうげき！キーボードの 1〜4 でも答えられます</div>`;
 }
 
 window.quitBattle = ()=>{
@@ -1424,6 +1501,7 @@ window.answerBattle = (pos)=>{
   const id = btl.queue.shift();
   const q = BANK[id];
   const m = btl.m;
+  const inst = activeMember();
   const chosen = btl.currentOrder[pos];
   const correct = (chosen === 0);
   const correctPos = btl.currentOrder.indexOf(0);
@@ -1438,52 +1516,86 @@ window.answerBattle = (pos)=>{
   }
 
   S.answered++;
-  let fbHtml;
   if(correct){
     S.correct++;
     if(wasReview) S.reviewDone++;
     scheduleAnswer(id, true, false);
     btl.combo++;
     if(btl.combo > S.battle.maxCombo) S.battle.maxCombo = btl.combo;
-    const msgs = [];
-    let dmg = 10 + Math.min(btl.combo-1, 3)*2;         // コンボで最大+6
-    if(btl.combo>=2) msgs.push(`⚡${btl.combo}コンボ！`);
-    if(m.weak===q.s){ dmg*=2; msgs.push("こうかは ばつぐんだ！"); }
-    if(Math.random()<0.15){ dmg=Math.round(dmg*1.5); msgs.push("きゅうしょに あたった！"); }
-    btl.ehp = Math.max(0, btl.ehp - dmg);
     S.xp += 10; btl.gainedXp += 10;
-    soundAtk();
-    const mob = document.getElementById("mob");
-    mob.classList.add("hit");
-    if(btl.ehp<=0) mob.classList.add("fainted");
-    const bar = document.getElementById("ehp");
-    bar.style.width = Math.round(btl.ehp/m.hp*100)+"%";
-    bar.className = hpClass(btl.ehp,m.hp);
-    document.getElementById("ehptxt").textContent = btl.ehp+"/"+m.hp;
-    fbHtml = `<div class="feedback ok"><b>⭕ 正解！ ${m.name}に ${dmg}ダメージ！</b> ${msgs.join(" ")}<br>${esc(q.e)}</div>`;
-  }else{
-    scheduleAnswer(id, false, false);
-    btl.combo = 0;
-    const edmg = m.atk + Math.floor(Math.random()*3);
-    btl.php = Math.max(0, btl.php - edmg);
-    soundNG();
-    const pl = document.getElementById("player");
-    pl.classList.add("hit");
-    const bar = document.getElementById("php");
-    bar.style.width = Math.round(btl.php/PLAYER_HP*100)+"%";
-    bar.className = hpClass(btl.php,PLAYER_HP);
-    document.getElementById("phptxt").textContent = btl.php+"/"+PLAYER_HP;
-    fbHtml = `<div class="feedback ng"><b>❌ 正解は「${esc(q.c[0])}」。${m.name}の反撃！ ${edmg}ダメージ！</b><br>${esc(q.e)}<br>
-      <span class="sub">${esc(m.line)}</span></div>`;
+    inst.xp += 8; // 出撃中のモンスターも正解のたびに育つ
+    soundOK();
+    save();
+    const moves = movesForType(inst.type);
+    const fbHtml = `<div class="feedback ok"><b>⭕ 正解！</b><br>${esc(q.e)}<br>
+        <span class="sub">${btl.combo>=2?`⚡${btl.combo}コンボ中！ `:""}わざを選んでこうげきしよう</span></div>
+      <div class="row" style="gap:8px;margin-top:8px">
+        ${moves.map((mv,mi2)=>`<button class="choice" style="text-align:center" onclick="useMove(${mi2})">${mv.emoji} ${mv.name}</button>`).join("")}
+      </div>`;
+    document.getElementById("fb").innerHTML = fbHtml;
+    ensureNextVisible();
+    return; // ダメージ処理はuseMove()で行う（わざ選択待ち）
   }
+
+  scheduleAnswer(id, false, false);
+  btl.combo = 0;
+  btl.tookDamage = true;
+  const edmg = m.atk + Math.floor(Math.random()*3);
+  btl.teamHp[inst.id] = Math.max(0, btl.teamHp[inst.id] - edmg);
+  soundNG();
+  const pl = document.getElementById("player");
+  if(pl) pl.classList.add("hit");
+  const maxHp = monsterMaxHp(inst);
+  const bar = document.getElementById("php");
+  if(bar){ bar.style.width = Math.round(btl.teamHp[inst.id]/maxHp*100)+"%"; bar.className = hpClass(btl.teamHp[inst.id],maxHp); }
+  const phptxt = document.getElementById("phptxt");
+  if(phptxt) phptxt.textContent = btl.teamHp[inst.id]+"/"+maxHp;
+  let fbHtml = `<div class="feedback ng"><b>❌ 正解は「${esc(q.c[0])}」。${m.name}の反撃！ ${esc(inst.name)}に${edmg}ダメージ！</b><br>${esc(q.e)}<br>
+    <span class="sub">${esc(m.line)}</span></div>`;
   save();
 
+  const alive = S.team.members.filter(t=>btl.teamHp[t.id]>0);
+  if(btl.teamHp[inst.id]<=0 && alive.length>0){
+    fbHtml += `<div class="feedback ng" style="margin-top:8px"><b>💥 ${esc(inst.name)}は ひんしになった！</b></div>
+      <button class="btn-main" onclick="openSwitch(true)">🔄 つぎのなかまを出す</button>`;
+  }else if(btl.teamHp[inst.id]<=0){
+    btl.next = loseBattle;
+    fbHtml += `<button class="btn-main" onclick="btlNext()">😵 手持ちが全員たおれてしまった…</button>`;
+  }else{
+    btl.next = nextBattleQuestion;
+    fbHtml += `<button class="btn-main" onclick="btlNext()">次へ ▶</button>`;
+  }
+  document.getElementById("fb").innerHTML = fbHtml;
+  ensureNextVisible();
+};
+
+window.useMove = (moveIdx)=>{
+  if(!btl) return;
+  const inst = activeMember();
+  const m = btl.m;
+  const move = movesForType(inst.type)[moveIdx];
+  const msgs = [];
+  let dmg = 10 + Math.min(btl.combo-1, 3)*2; // コンボで最大+6
+  if(btl.combo>=2) msgs.push(`⚡${btl.combo}コンボ！`);
+  const mult = typeMultiplier(move.type, m.type);
+  dmg = Math.round(dmg*mult);
+  if(mult>=1.5) msgs.push("こうかは ばつぐんだ！");
+  else if(mult<=0.6) msgs.push("こうかは いまひとつのようだ…");
+  if(Math.random()<0.15){ dmg=Math.round(dmg*1.5); msgs.push("きゅうしょに あたった！"); }
+  btl.ehp = Math.max(0, btl.ehp - dmg);
+  soundAtk();
+  const mob = document.getElementById("mob");
+  if(mob){ mob.classList.add("hit"); if(btl.ehp<=0) mob.classList.add("fainted"); }
+  const bar = document.getElementById("ehp");
+  if(bar){ bar.style.width = Math.round(btl.ehp/m.hp*100)+"%"; bar.className = hpClass(btl.ehp,m.hp); }
+  const ehptxt = document.getElementById("ehptxt");
+  if(ehptxt) ehptxt.textContent = btl.ehp+"/"+m.hp;
+
+  let fbHtml = `<div class="feedback ok"><b>${move.emoji} ${move.name}！ ${m.name}に ${dmg}ダメージ！</b> ${msgs.join(" ")}</div>`;
+  save();
   if(btl.ehp<=0){
     btl.next = winBattle;
     fbHtml += `<button class="btn-main" onclick="btlNext()">🏆 しょうり！</button>`;
-  }else if(btl.php<=0){
-    btl.next = loseBattle;
-    fbHtml += `<button class="btn-main" onclick="btlNext()">😵 たおれてしまった…</button>`;
   }else{
     btl.next = nextBattleQuestion;
     fbHtml += `<button class="btn-main" onclick="btlNext()">次へ ▶</button>`;
@@ -1493,14 +1605,43 @@ window.answerBattle = (pos)=>{
 };
 window.btlNext = ()=>{ if(btl && btl.next){ const f=btl.next; btl.next=null; f(); } };
 
+/* ---- 手持ちの交代（ひんし時の強制交代／自由交代） ---- */
+window.openSwitch = (forced)=>{
+  if(!btl) return;
+  const rows = S.team.members.map(t=>{
+    const hp = btl.teamHp[t.id];
+    const maxHp = monsterMaxHp(t);
+    const fainted = hp<=0;
+    const isActive = t.id===btl.activeId;
+    return `<button class="monster-row ${fainted?"locked":""}" ${fainted||isActive?"disabled":""} onclick="switchTo(${t.id})">
+      <span class="memoji">${t.emoji}</span>
+      <div class="grow"><b>${esc(t.name)} <span class="sub">Lv.${monsterLevel(t)}</span></b>
+        <div class="sub">HP ${hp}/${maxHp}${isActive?"（出撃中）":fainted?"（ひんし）":""}</div></div>
+    </button>`;
+  }).join("");
+  app.innerHTML = `<h1 style="margin-bottom:12px">🔄 交代するモンスターを選ぼう</h1>
+    <div class="card">${rows}</div>
+    ${forced?"":'<button class="btn-sub" onclick="cancelSwitch()">キャンセル</button>'}`;
+};
+window.cancelSwitch = ()=>{ nextBattleQuestion(); };
+window.switchTo = (id)=>{
+  if(!btl) return;
+  const t = S.team.members.find(x=>x.id===id);
+  if(!t || btl.teamHp[t.id]<=0) return;
+  btl.activeId = id;
+  nextBattleQuestion();
+};
+
 function winBattle(){
   const m = btl.m, mi = btl.mi;
   const firstClear = (mi === S.battle.stage);
   const bonus = 20 + m.lv*3;
   S.xp += bonus; btl.gainedXp += bonus;
   S.battle.wins++;
-  if(m.secret && btl.php===PLAYER_HP) S.battle.secretNoHitWins++;
+  if(m.secret && !btl.tookDamage) S.battle.secretNoHitWins++;
   if(firstClear) S.battle.stage++;
+  const inst = activeMember();
+  inst.xp += 15; // しょうりボーナス経験値
   updateStreak();
   const newBadges = checkNewBadges();
   save();
@@ -1513,12 +1654,13 @@ function winBattle(){
       <h1>${m.emoji} ${m.name}を たおした！</h1>
       <div class="stat3">
         <div><div class="v" style="color:var(--gold)">+${doneBtl.gainedXp}</div><div class="k">獲得XP（ボーナス+${bonus}）</div></div>
-        <div><div class="v">❤️${doneBtl.php}</div><div class="k">のこりHP</div></div>
+        <div><div class="v">${inst.emoji} Lv.${monsterLevel(inst)}</div><div class="k">${esc(inst.name)}</div></div>
         <div><div class="v">🔥${S.streak}</div><div class="k">連続日数</div></div>
       </div>
       ${firstClear && nextM ? `<div class="feedback ok" style="margin-bottom:10px"><b>😈 つぎのあいて「${nextM.name}」が あらわれた！</b></div>`:""}
       ${newBadges.map(b=>`<div class="feedback ok" style="margin-bottom:10px"><b>${b.emoji} バッジ獲得「${b.name}」</b><br><span class="sub">${b.desc}</span></div>`).join("")}
-      <button class="btn-main" onclick="go('battle')">バトルにもどる</button>
+      ${m.capturable?`<button class="btn-main" onclick="captureMonster(${mi})">🎣 なかまにする</button>`:""}
+      <button class="btn-sub" onclick="go('battle')">バトルにもどる</button>
       <button class="btn-sub" onclick="go('home')">ホームへ</button>
     </div>`;
   nav("battle");
@@ -1534,12 +1676,102 @@ function loseBattle(){
   app.innerHTML = `
     <div class="card center">
       <div class="result-emoji">😵</div>
-      <h1>${m.name}に やられてしまった…</h1>
-      <div class="sub" style="margin:8px 0;line-height:1.8">でも解いたぶんのXP（+${doneBtl.gainedXp}）と復習記録はしっかり残っています。<br>まちがえた問題は復習に登場します。おぼえ直してリベンジしよう！</div>
+      <h1>${m.name}に 手持ちが全員たおされてしまった…</h1>
+      <div class="sub" style="margin:8px 0;line-height:1.8">でも解いたぶんのXP（+${doneBtl.gainedXp}）と復習記録はしっかり残っています。<br>まちがえた問題は復習に登場します。手持ちを強くしてリベンジしよう！</div>
       <button class="btn-main" onclick="startBattle(${mi})">🔥 リベンジする</button>
+      <button class="btn-sub" onclick="viewTeam()">🎒 手持ちを見る</button>
       <button class="btn-sub" onclick="go('battle')">バトルにもどる</button>
     </div>`;
   nav("battle");
+}
+
+/* ---- 手持ち管理・なかまにする ---- */
+function renderTeam(){
+  const rows = S.team.members.map((t,idx)=>{
+    const maxHp = monsterMaxHp(t);
+    const atk = monsterAtk(t);
+    const moves = movesForType(t.type);
+    const isLead = idx===S.team.activeIndex;
+    return `<div class="card">
+      <div class="row">
+        <span style="font-size:36px">${t.emoji}</span>
+        <div class="grow">
+          <div class="row"><b>${esc(t.name)}</b><span class="pill">Lv.${monsterLevel(t)}</span>${isLead?'<span class="pill" style="border-color:var(--gold);color:var(--gold)">先頭</span>':""}</div>
+          <div class="sub" style="margin-top:4px">HP ${maxHp}｜こうげき ${atk}｜タイプ：${t.type?SUBJECTS[t.type].emoji+SUBJECTS[t.type].name:"なし"}</div>
+          <div class="sub">個体値：HP+${t.iv.hp} こうげき+${t.iv.atk}（0〜15）</div>
+          <div class="sub">わざ：${moves.map(mv=>`${mv.emoji}${mv.name}`).join(" ／ ")}</div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px;gap:8px">
+        ${isLead?"":`<button class="btn-sub" style="margin-top:0" onclick="setLead(${idx})">先頭にする</button>`}
+        ${S.team.members.length>1?`<button class="btn-sub" style="margin-top:0;color:var(--ng)" onclick="releaseMember(${idx})">にがす</button>`:""}
+      </div>
+    </div>`;
+  }).join("");
+  app.innerHTML = `<h1 style="margin-bottom:12px">🎒 手持ちモンスター（${S.team.members.length}/3）</h1>
+    <div class="sub" style="margin-bottom:12px">バトルで通常モンスターを倒すとここに新しい仲間が増える。先頭のモンスターがバトルの出撃モンスターになる。</div>
+    ${rows}
+    <button class="btn-sub" onclick="go('battle')">⬅ バトルにもどる</button>`;
+}
+window.viewTeam = renderTeam;
+window.setLead = (idx)=>{ S.team.activeIndex = idx; save(); renderTeam(); };
+window.releaseMember = (idx)=>{
+  if(S.team.members.length<=1) return;
+  const t = S.team.members[idx];
+  if(!confirm(`${t.name}をにがしますか？`)) return;
+  S.team.members.splice(idx,1);
+  if(S.team.activeIndex>=S.team.members.length) S.team.activeIndex = 0;
+  save();
+  renderTeam();
+};
+
+let pendingCapture = null;
+window.captureMonster = (mi)=>{
+  const m = MONSTERS[mi];
+  const name = CAPTURE_NAME[m.speciesBase] || m.speciesBase || m.name;
+  if(S.team.members.length>=3){
+    pendingCapture = {mi};
+    renderReleasePicker();
+    return;
+  }
+  const inst = makeMonsterInstance({emoji:m.emoji, name, type:m.type, speciesBase:m.speciesBase});
+  S.team.members.push(inst);
+  const newBadges = checkNewBadges();
+  save();
+  renderCaptureResult(inst, newBadges);
+};
+function renderReleasePicker(){
+  const rows = S.team.members.map((t,idx)=>`<button class="monster-row" onclick="releaseAndCapture(${idx})">
+    <span class="memoji">${t.emoji}</span>
+    <div class="grow"><b>${esc(t.name)} <span class="sub">Lv.${monsterLevel(t)}</span></b></div>
+    <span>にがす</span></button>`).join("");
+  app.innerHTML = `<h1 style="margin-bottom:12px">🎒 手持ちがいっぱい！</h1>
+    <div class="sub" style="margin-bottom:10px">だれかを1体にがして、新しいなかまと交代する？</div>
+    <div class="card">${rows}</div>
+    <button class="btn-sub" onclick="cancelCapture()">やめておく</button>`;
+}
+window.releaseAndCapture = (idx)=>{
+  if(!pendingCapture) return;
+  const m = MONSTERS[pendingCapture.mi];
+  const name = CAPTURE_NAME[m.speciesBase] || m.speciesBase || m.name;
+  const inst = makeMonsterInstance({emoji:m.emoji, name, type:m.type, speciesBase:m.speciesBase});
+  S.team.members.splice(idx, 1, inst);
+  if(S.team.activeIndex>=S.team.members.length) S.team.activeIndex = 0;
+  const newBadges = checkNewBadges();
+  save();
+  pendingCapture = null;
+  renderCaptureResult(inst, newBadges);
+};
+window.cancelCapture = ()=>{ pendingCapture = null; go("battle"); };
+function renderCaptureResult(inst, newBadges){
+  app.innerHTML = `<div class="card center">
+    <div class="result-emoji">🎣</div>
+    <h1>${esc(inst.name)}が なかまになった！</h1>
+    <div class="sub" style="margin:10px 0">${inst.emoji} Lv.${monsterLevel(inst)}｜個体値 HP+${inst.iv.hp} こうげき+${inst.iv.atk}</div>
+    ${newBadges.map(b=>`<div class="feedback ok" style="margin-bottom:10px"><b>${b.emoji} バッジ獲得「${b.name}」</b><br><span class="sub">${b.desc}</span></div>`).join("")}
+    <button class="btn-main" onclick="go('battle')">バトルにもどる</button>
+    <button class="btn-sub" onclick="viewTeam()">🎒 手持ちを見る</button>
+  </div>`;
 }
 
 /* ---- バッジ ---- */
@@ -1584,7 +1816,7 @@ function renderScience(){
     <p>まちがえた問題はクエストの最後にもう一度出ます。<b>自力で思い出して正解し直す</b>ことが、次に同じミスをしない一番の近道です。</p>
 
     <h3>6. ゲーミフィケーション — 続けられる仕組み</h3>
-    <p>XP・レベル・連続日数・バッジは「今日もやろう」という気持ちを支えるためのものです。学習は<b>短時間でも毎日続ける</b>ことが最も効果的だからこそ、続けたくなる仕掛けを入れています。「まなびバトル」も同じで、モンスターとの対戦という形をとっていますが、中身はすべて検索練習（クイズ）です。バトル中の解答も復習スケジュールにきちんと記録されます。弱点教科ボーナスは、5教科をまんべんなく学ぶきっかけになるよう設計しています。</p>
+    <p>XP・レベル・連続日数・バッジは「今日もやろう」という気持ちを支えるためのものです。学習は<b>短時間でも毎日続ける</b>ことが最も効果的だからこそ、続けたくなる仕掛けを入れています。「まなびバトル」も同じで、なかまを集めて育てるポケモン風の対戦という形をとっていますが、中身はすべて検索練習（クイズ）です。バトル中の解答も復習スケジュールにきちんと記録されます。5教科を五角形の相性にした「タイプ相性」は、5教科をまんべんなく学ぶきっかけになるよう設計しています。</p>
     <cite>Hamari et al. (2014) のレビュー／自己決定理論 (Deci & Ryan)：達成の可視化は内発的動機づけを支える</cite>
 
     <h3>7. カリキュラム連動 — 習ったところから出題</h3>
