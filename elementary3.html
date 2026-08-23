@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- 外部への通信・外部リソース読み込みを全面禁止（このアプリは端末内で完結する） -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<title>まなびクエスト 小3 — 科学的ゲーミング学習</title>
+<style>
+  :root{
+    --bg:#0f1425; --panel:#1a2138; --panel2:#222b4a; --line:#2e3a63;
+    --text:#eef1fb; --sub:#9aa5c9;
+    --sansu:#4f8ef7; --kokugo:#f7a44f; --rika:#3ecf8e; --shakai:#b48ef7;
+    --gold:#ffd166; --ok:#3ecf8e; --ng:#f75f6d;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{
+    font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,sans-serif;
+    background:radial-gradient(1200px 600px at 50% -100px,#1b2445,var(--bg));
+    color:var(--text); min-height:100vh;
+  }
+  #app{max-width:540px;margin:0 auto;padding:16px 16px 120px;}
+  h1{font-size:23px} h2{font-size:19px;margin-bottom:10px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;}
+  .row{display:flex;align-items:center;gap:10px;}
+  .grow{flex:1}
+  .sub{color:var(--sub);font-size:14px;line-height:1.7}
+  .big{font-size:26px;font-weight:800}
+  button{
+    font-family:inherit;border:none;border-radius:14px;cursor:pointer;
+    font-size:17px;font-weight:700;color:var(--text);
+  }
+  .btn-main{
+    width:100%;padding:17px;background:linear-gradient(135deg,#5b7cfa,#8a5bfa);
+    box-shadow:0 6px 20px rgba(90,110,250,.35);margin-top:6px;
+  }
+  .btn-main:active{transform:scale(.98)}
+  .btn-sub{width:100%;padding:14px;background:var(--panel2);border:1px solid var(--line);margin-top:8px;}
+  .btn-ghost{background:none;color:var(--sub);font-size:14px;padding:8px;font-weight:600}
+  /* XP bar */
+  .xpbar{height:12px;background:#0c1020;border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+  .xpbar>div{height:100%;background:linear-gradient(90deg,#ffd166,#ff9f43);transition:width .5s}
+  .masterybar{height:8px;background:#0c1020;border-radius:99px;overflow:hidden}
+  .masterybar>div{height:100%;transition:width .5s}
+  .pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;background:var(--panel2);border:1px solid var(--line)}
+  /* quiz */
+  .qtext{font-size:20px;font-weight:700;line-height:1.8;margin:14px 0 18px}
+  .choice{
+    display:block;width:100%;text-align:left;padding:15px 16px;margin-bottom:10px;
+    background:var(--panel2);border:2px solid var(--line);border-radius:14px;
+    font-size:17px;font-weight:600;line-height:1.6;
+  }
+  .choice:active{transform:scale(.99)}
+  .choice.correct{border-color:var(--ok);background:rgba(62,207,142,.15)}
+  .choice.wrong{border-color:var(--ng);background:rgba(247,95,109,.15)}
+  .choice.dim{opacity:.45}
+  .feedback{border-radius:14px;padding:14px;margin-top:6px;font-size:14px;line-height:1.8;animation:pop .25s}
+  .feedback.ok{background:rgba(62,207,142,.12);border:1px solid var(--ok)}
+  .feedback.ng{background:rgba(247,95,109,.12);border:1px solid var(--ng)}
+  @keyframes pop{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+  .progress{height:10px;background:#0c1020;border-radius:99px;overflow:hidden;margin:8px 0 4px}
+  .progress>div{height:100%;background:linear-gradient(90deg,#3ecf8e,#4f8ef7);transition:width .3s}
+  /* nav */
+  nav{
+    position:fixed;bottom:0;left:0;right:0;background:rgba(15,20,37,.95);
+    border-top:1px solid var(--line);backdrop-filter:blur(8px);z-index:10;
+  }
+  nav .inner{max-width:540px;margin:0 auto;display:flex}
+  nav button{flex:1;background:none;padding:10px 4px 14px;font-size:11px;color:var(--sub);font-weight:600}
+  nav button.active{color:var(--gold)}
+  nav .ico{display:block;font-size:20px;margin-bottom:2px}
+  .badge{
+    display:flex;gap:12px;align-items:center;background:var(--panel2);
+    border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;
+  }
+  .badge.locked{opacity:.4;filter:grayscale(1)}
+  .badge .bemoji{font-size:30px}
+  .unit-btn{
+    display:flex;align-items:center;gap:10px;width:100%;padding:14px;margin-bottom:8px;
+    background:var(--panel2);border:1px solid var(--line);border-radius:12px;text-align:left;font-size:16px;
+  }
+  .streak-flame{font-size:34px;filter:drop-shadow(0 0 8px rgba(255,160,60,.6))}
+  .science h3{font-size:16px;margin:16px 0 6px;color:var(--gold)}
+  .science p{font-size:14px;line-height:1.9;color:#cdd5ef}
+  .science cite{display:block;font-size:12px;color:var(--sub);margin-top:4px;font-style:normal}
+  .result-emoji{font-size:56px;text-align:center;margin:10px 0}
+  .stat3{display:flex;text-align:center;margin:14px 0}
+  .stat3>div{flex:1}
+  .stat3 .v{font-size:22px;font-weight:800}
+  .stat3 .k{font-size:12px;color:var(--sub)}
+  .duechip{font-size:12px;color:var(--sub)}
+  .center{text-align:center}
+  a{color:#8fb3ff}
+  /* battle */
+  .hpbar{height:14px;background:#0c1020;border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+  .hpbar>div{height:100%;background:linear-gradient(90deg,#3ecf8e,#9be15d);transition:width .4s}
+  .hpbar>div.low{background:linear-gradient(90deg,#ffd166,#f7a44f)}
+  .hpbar>div.danger{background:linear-gradient(90deg,#f75f6d,#ff8fa0)}
+  .monster-emoji{font-size:64px;text-align:center;filter:drop-shadow(0 6px 14px rgba(0,0,0,.5));transition:opacity .5s,filter .5s}
+  .monster-emoji.fainted{opacity:.25;filter:grayscale(1)}
+  @keyframes shakeX{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+  .hit{animation:shakeX .4s}
+  .combo-chip{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:800;
+    background:linear-gradient(135deg,#ffd166,#ff9f43);color:#33230a}
+  .monster-row{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;margin-bottom:8px;
+    background:var(--panel2);border:1px solid var(--line);border-radius:14px;text-align:left;font-size:15px}
+  .monster-row .memoji{font-size:32px}
+  .monster-row.beaten .memoji{filter:grayscale(.4)}
+  .monster-row.locked{opacity:.45;filter:grayscale(1)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav><div class="inner" id="nav"></div></nav>
+
+<script>
+"use strict";
+/* =====================================================================
+   まなびクエスト 小3
+   根拠のある学習メカニズム:
+   - 間隔反復 (Ebbinghaus 1885; Cepeda et al. 2006)
+   - 検索練習・テスト効果 (Roediger & Karpicke 2006)
+   - 即時フィードバック (Hattie & Timperley 2007)
+   - インターリービング (Rohrer & Taylor 2007)
+   - 習慣化・動機づけ (Deci & Ryan; Hamari et al. 2014)
+   小学3年生向けに、教科数・出題数・言葉づかいを学習容量に合わせて調整。
+   ===================================================================== */
+
+const SUBJECTS = {
+  sansu :{name:"算数", emoji:"🧮", color:"var(--sansu)"},
+  kokugo:{name:"国語", emoji:"📖", color:"var(--kokugo)"},
+  rika  :{name:"理科", emoji:"🔬", color:"var(--rika)"},
+  shakai:{name:"社会", emoji:"🌏", color:"var(--shakai)"},
+};
+
+/* 問題バンク: c[0]が正解（表示時にシャッフル） */
+const BANK = [
+/* ===== 算数・たし算とひき算の筆算 ===== */
+{s:"sansu",u:"たし算とひき算の筆算",q:"245+367 の答えは？",c:["612","502","622","512"],e:"一の位から順にたし算します。5+7=12で2を書いて1くり上げ、4+6+1=11で1を書いて1くり上げ、2+3+1=6。答えは612。"},
+{s:"sansu",u:"たし算とひき算の筆算",q:"900−356 の答えは？",c:["544","554","644","454"],e:"一の位は0から6を引けないので、となりから借りて計算します。900−356=544。"},
+{s:"sansu",u:"たし算とひき算の筆算",q:"528+275 の答えは？",c:["803","793","813","703"],e:"一の位8+5=13で3を書いて1くり上げ、十の位2+7+1=10で0を書いて1くり上げ、百の位5+2+1=8。答えは803。"},
+{s:"sansu",u:"たし算とひき算の筆算",q:"ひっ算で位をそろえて書くのは何のため？",c:["同じ位どうしを計算するため","数字を大きく見せるため","答えを早く出すため","見た目をきれいにするため"],e:"一の位は一の位どうし、十の位は十の位どうしで計算するために、位をそろえて書きます。"},
+{s:"sansu",u:"たし算とひき算の筆算",q:"くり上がりが起きるのはどんなとき？",c:["同じ位の数の和が10以上になるとき","同じ位の数の差がマイナスになるとき","位がそろわないとき","一の位が0のとき"],e:"同じ位どうしをたして10以上になったら、上の位に1くり上げます。"},
+/* ===== 算数・かけ算の筆算 ===== */
+{s:"sansu",u:"かけ算の筆算",q:"23×4 の答えは？",c:["92","86","96","88"],e:"20×4=80、3×4=12。80+12=92。"},
+{s:"sansu",u:"かけ算の筆算",q:"かけ算の答えを何という？",c:["積","和","差","商"],e:"たし算の答え＝和、ひき算の答え＝差、かけ算の答え＝積、わり算の答え＝商です。"},
+{s:"sansu",u:"かけ算の筆算",q:"15×6 の答えは？",c:["90","80","96","84"],e:"10×6=60、5×6=30。60+30=90。"},
+{s:"sansu",u:"かけ算の筆算",q:"40×7 の答えは？",c:["280","270","290","240"],e:"4×7=28に0を1つつけて280。"},
+{s:"sansu",u:"かけ算の筆算",q:"かけ算の筆算で、一の位から順に計算するのはなぜ？",c:["くり上がりを次の位に足すため","見た目をきれいにするため","答えを覚えやすくするため","十の位を先に計算すると間違えやすいため"],e:"一の位から計算することで、くり上がった数をとなりの位の計算にそのまま足せます。"},
+/* ===== 算数・わり算 ===== */
+{s:"sansu",u:"わり算",q:"24÷6 の答えは？",c:["4","3","5","6"],e:"6×4=24なので、24÷6=4。"},
+{s:"sansu",u:"わり算",q:"わり算の答えを何という？",c:["商","積","和","差"],e:"わり算の答えは「商（しょう）」といいます。"},
+{s:"sansu",u:"わり算",q:"45÷5 の答えは？",c:["9","8","7","10"],e:"5×9=45なので、45÷5=9。"},
+{s:"sansu",u:"わり算",q:"20÷3 を計算すると、あまりはいくつ？",c:["あまり2","あまり1","あまり3","わりきれる"],e:"3×6=18で、20−18=2。20÷3=6あまり2。"},
+{s:"sansu",u:"わり算",q:"わり算で「わられる数」と「わる数」が同じとき、答えはいつも？",c:["1","0","わり算できない","わられる数と同じ"],e:"たとえば7÷7=1のように、同じ数どうしのわり算の答えはいつも1になります。"},
+/* ===== 算数・大きな数 ===== */
+{s:"sansu",u:"大きな数",q:"10000（1万）を10こ集めた数は？",c:["十万","一万","百万","千万"],e:"1万を10こ集めると10万になります。0が1つ増えるごとに10倍になります。"},
+{s:"sansu",u:"大きな数",q:"1000万を10こ集めると？",c:["1億","100万","1000億","1兆"],e:"1000万を10こ集めると1億（100000000）になります。"},
+{s:"sansu",u:"大きな数",q:"「3050600」を漢字で書くと？",c:["三百五万六百","三十五万六百","三百五万六千","三百万五百六十"],e:"右から4けたごとに区切ると「305」「0600」。305万0600＝三百五万六百です。"},
+{s:"sansu",u:"大きな数",q:"一万は、千を何こ集めた数？",c:["10こ","100こ","1000こ","1こ"],e:"千が10こで一万（10000）になります。"},
+{s:"sansu",u:"大きな数",q:"99999より1大きい数は？",c:["100000","99998","100001","9999"],e:"9が5つ並んだ数に1を足すと、位が1つ上がって100000になります。"},
+/* ===== 算数・長さ・重さ・かさ ===== */
+{s:"sansu",u:"長さ・重さ・かさ",q:"1kmは何mですか？",c:["1000m","100m","10000m","10m"],e:"1km＝1000mです。長い道のりをはかるときに使います。"},
+{s:"sansu",u:"長さ・重さ・かさ",q:"1kgは何gですか？",c:["1000g","100g","10000g","10g"],e:"1kg＝1000gです。"},
+{s:"sansu",u:"長さ・重さ・かさ",q:"1Lは何dLですか？",c:["10dL","100dL","1000dL","1dL"],e:"1L＝10dLです。"},
+{s:"sansu",u:"長さ・重さ・かさ",q:"1Lは何mLですか？",c:["1000mL","100mL","10000mL","10mL"],e:"1L＝1000mLです。"},
+{s:"sansu",u:"長さ・重さ・かさ",q:"プールの長さをはかるのにいちばん合う単位は？",c:["m（メートル）","mm（ミリメートル）","g（グラム）","dL（デシリットル）"],e:"プールのような長い長さには m（メートル）や km（キロメートル）を使います。"},
+/* ===== 算数・円と球 ===== */
+{s:"sansu",u:"円と球",q:"円のまん中の点を何という？",c:["中心","直径","半径","円周"],e:"円のまん中の点を「中心」といいます。"},
+{s:"sansu",u:"円と球",q:"円の中心から円のまわりまでひいた直線を何という？",c:["半径","直径","中心","円周"],e:"中心からまわりまでの直線を「半径」といいます。"},
+{s:"sansu",u:"円と球",q:"直径10cmの円の半径は？",c:["5cm","10cm","20cm","15cm"],e:"直径は半径の2倍なので、半径は直径の半分の5cmです。"},
+{s:"sansu",u:"円と球",q:"球（ボールのような形）を、どこで切っても切り口はどんな形になる？",c:["円","三角形","四角形","楕円"],e:"球はどこで切っても切り口はかならず円になります。"},
+{s:"sansu",u:"円と球",q:"半径4cmの円の直径は？",c:["8cm","4cm","2cm","16cm"],e:"直径は半径の2倍なので、4cm×2=8cmです。"},
+/* ===== 算数・三角形と分数 ===== */
+{s:"sansu",u:"三角形と分数",q:"3つの辺の長さがすべて同じ三角形を何という？",c:["正三角形","二等辺三角形","直角三角形","不等辺三角形"],e:"3つの辺の長さがすべて同じ三角形を「正三角形」といいます。"},
+{s:"sansu",u:"三角形と分数",q:"2つの辺の長さが同じ三角形を何という？",c:["二等辺三角形","正三角形","直角三角形","平行四辺形"],e:"2つの辺の長さが同じ三角形を「二等辺三角形」といいます。"},
+{s:"sansu",u:"三角形と分数",q:"ケーキを同じ大きさに4つに切った1つ分を分数で表すと？",c:["4分の1","4分の4","1分の4","2分の1"],e:"4つに等しく分けた1つ分は「4分の1（1/4）」と表します。"},
+{s:"sansu",u:"三角形と分数",q:"2分の1 と 4分の2 の大きさを比べると？",c:["同じ大きさ","2分の1の方が大きい","4分の2の方が大きい","比べられない"],e:"2分の1と4分の2は形はちがって見えますが、同じ大きさを表しています。"},
+{s:"sansu",u:"三角形と分数",q:"正三角形の3つの角の大きさは？",c:["すべて同じ","すべてちがう","2つだけ同じ","決まっていない"],e:"正三角形は辺の長さがすべて同じなので、角の大きさもすべて同じになります。"},
+/* ===== 国語・漢字の読み書き ===== */
+{s:"kokugo",u:"漢字の読み書き",q:"「安心する」の読み方は？",c:["あんしん","あんこ","やすごころ","あんじん"],e:"安心＝心配なくおだやかな気持ちでいること。"},
+{s:"kokugo",u:"漢字の読み書き",q:"「運動場を走る」の「運動」の読み方は？",c:["うんどう","はこどう","うごき","ゆんどう"],e:"運動＝体を動かすこと。「運」も「動」も3年生で習う漢字です。"},
+{s:"kokugo",u:"漢字の読み書き",q:"「かなしい」を漢字で書くと？",c:["悲しい","哀しい","憂しい","苦しい"],e:"「悲しい」と書きます。「悲」は3年生で習う漢字です。"},
+{s:"kokugo",u:"漢字の読み書き",q:"「祭りの日」の「祭」の読み方は？",c:["まつり","さい","いわい","さかり"],e:"祭＝まつり。「祭日」のように「さい」と読むこともあります。"},
+{s:"kokugo",u:"漢字の読み書き",q:"「美しい花」の「美」の読み方は？",c:["うつくしい","きれい","よい","はなやか"],e:"美＝うつくしい。見た目がとてもよいこと。"},
+{s:"kokugo",u:"漢字の読み書き",q:"「薬を飲む」の「薬」の読み方は？",c:["くすり","やく","どく","つゆ"],e:"薬＝くすり。病気やけがを治すために飲んだりぬったりするものです。"},
+/* ===== 国語・こそあど言葉 ===== */
+{s:"kokugo",u:"こそあど言葉",q:"「これ・それ・あれ・どれ」のような言葉を何という？",c:["こそあど言葉","かざり言葉","つなぎ言葉","気持ち言葉"],e:"物や場所などを指し示す言葉を「こそあど言葉」といいます。"},
+{s:"kokugo",u:"こそあど言葉",q:"話す人の近くにあるものを指す言葉は？",c:["これ","それ","あれ","どれ"],e:"自分の近くのものは「これ」、相手の近くのものは「それ」で表します。"},
+{s:"kokugo",u:"こそあど言葉",q:"話す人からも聞く人からも遠くにあるものを指す言葉は？",c:["あれ","これ","それ","どれ"],e:"どちらからも遠いものは「あれ」で表します。"},
+{s:"kokugo",u:"こそあど言葉",q:"たずねるときに使う言葉はどれ？",c:["どれ","これ","それ","あれ"],e:"どれ・どこ・どちらなど「ど」がつく言葉は、たずねるときに使います。"},
+{s:"kokugo",u:"こそあど言葉",q:"「その本を貸してください」の「その」は、何を指す言葉？",c:["聞く人の近くにあるもの","話す人の近くにあるもの","どちらからも遠いもの","わからないもの"],e:"「そ」がつく言葉は、聞く人（相手）の近くにあるものを指します。"},
+/* ===== 国語・主語と述語 ===== */
+{s:"kokugo",u:"主語と述語",q:"「花がさく」の主語はどれ？",c:["花が","さく","きれいに","とても"],e:"文の中で「何が（は）」にあたる部分を主語といいます。"},
+{s:"kokugo",u:"主語と述語",q:"「花がさく」の述語はどれ？",c:["さく","花が","きれいに","とても"],e:"文の中で「どうする」にあたる部分を述語といいます。"},
+{s:"kokugo",u:"主語と述語",q:"文の中で「何が（は）」にあたる部分を何という？",c:["主語","述語","修飾語","接続語"],e:"「何が」「だれは」にあたる部分を主語といいます。"},
+{s:"kokugo",u:"主語と述語",q:"文の中で「どうする」「どんなだ」にあたる部分を何という？",c:["述語","主語","修飾語","接続語"],e:"「どうする」「どんなだ」「何だ」にあたる部分を述語といいます。"},
+{s:"kokugo",u:"主語と述語",q:"「弟は元気だ」の述語はどれ？",c:["元気だ","弟は","は","だ"],e:"「どんなだ」にあたる「元気だ」が述語です。"},
+/* ===== 国語・ことわざ・慣用句 ===== */
+{s:"kokugo",u:"ことわざ・慣用句",q:"「犬も歩けば棒に当たる」の意味に近いのは？",c:["何かをすれば思いがけないことに出会う","犬は歩くのが好き","じっとしているのがよい","棒を持って歩くとよい"],e:"何かをすると、思いがけないこと（よいこと・わるいこと）に出会う、という意味です。"},
+{s:"kokugo",u:"ことわざ・慣用句",q:"「猿も木から落ちる」の意味は？",c:["上手な人でも失敗することがある","猿は木登りが下手","木に登ってはいけない","失敗しない人はいない"],e:"木登りが得意な猿でも落ちることがあるように、名人でも失敗することがある、という意味です。"},
+{s:"kokugo",u:"ことわざ・慣用句",q:"「頭を冷やす」の意味は？",c:["気持ちを落ち着ける","頭が痛くなる","冷たい水をあびる","頭がよくなる"],e:"おこったり興奮したりした気持ちを落ち着かせる、という意味です。"},
+{s:"kokugo",u:"ことわざ・慣用句",q:"「石の上にも三年」の意味は？",c:["がまん強く続ければうまくいく","石はつめたい","3年たてば忘れる","早くあきらめたほうがよい"],e:"つめたい石の上でも3年すわり続けるとあたたかくなる、というたとえから、がまん強く続ければ成功する、という意味になりました。"},
+{s:"kokugo",u:"ことわざ・慣用句",q:"「耳をすます」の意味は？",c:["注意してよく聞く","耳をきれいにする","音を出さない","耳が痛くなる"],e:"音がよく聞こえるように、注意深く聞くことを「耳をすます」といいます。"},
+/* ===== 国語・国語辞典の使い方 ===== */
+{s:"kokugo",u:"国語辞典の使い方",q:"国語辞典で言葉をさがすとき、並んでいる順は？",c:["五十音順","画数の多い順","アルファベット順","ページ数の順"],e:"国語辞典の言葉は「あいうえお」の五十音順に並んでいます。"},
+{s:"kokugo",u:"国語辞典の使い方",q:"国語辞典では「か」と「が」、どちらが先に出てくる？",c:["か","が","どちらも同じ","決まっていない"],e:"清音（か）が先で、濁音（が）は後に出てきます。"},
+{s:"kokugo",u:"国語辞典の使い方",q:"動詞「食べる」を国語辞典で調べるとき、見出し語はどの形？",c:["食べる（言い切りの形）","食べた","食べて","食べます"],e:"辞典では「食べる」のような言い切りの形（基本の形）で見出しになっています。"},
+{s:"kokugo",u:"国語辞典の使い方",q:"国語辞典に出てくる言葉の意味の説明を何という？",c:["語義（意味）","例文","見出し","索引"],e:"言葉の意味の説明のことを語義といいます。"},
+{s:"kokugo",u:"国語辞典の使い方",q:"「あ」「い」「う」「え」「お」のようなならびを何という？",c:["五十音","いろは歌","かなづかい","部首"],e:"かなを一定の順にならべたものを五十音といいます。"},
+/* ===== 国語・ローマ字 ===== */
+{s:"kokugo",u:"ローマ字",q:"「さくら」をローマ字で書くと？",c:["sakura","sakla","shakura","sakuwa"],e:"さ=sa、く=ku、ら=ra なので「sakura」です。"},
+{s:"kokugo",u:"ローマ字",q:"「ねこ」をローマ字で書くと？",c:["neko","neco","nyeko","noko"],e:"ね=ne、こ=ko なので「neko」です。"},
+{s:"kokugo",u:"ローマ字",q:"「とけい」をローマ字で書くと？",c:["tokei","tokee","tokey","tokai"],e:"と=to、け=ke、い=i なので「tokei」です。"},
+{s:"kokugo",u:"ローマ字",q:"「ん」をローマ字で書くと？",c:["n","nn","m","en"],e:"「ん」はローマ字で「n」と書きます。"},
+{s:"kokugo",u:"ローマ字",q:"「りんご」をローマ字で書くと？",c:["ringo","rinngo","lingo","ringou"],e:"り=ri、ん=n、ご=go をつなげて「ringo」です。"},
+{s:"kokugo",u:"ローマ字",q:"ローマ字は主に何のためにつくられた表し方？",c:["日本語の発音をアルファベットで表すため","英語を漢字で表すため","ひらがなを覚えるため","数字を表すため"],e:"ローマ字は、日本語の音をアルファベットで書き表すためのものです。"},
+/* ===== 理科・植物の育ち方 ===== */
+{s:"rika",u:"植物の育ち方",q:"ホウセンカの種をまいた後、はじめに出てくる葉を何という？",c:["子葉","本葉","花","つぼみ"],e:"種から最初に出る葉を「子葉（しよう）」といい、その後「本葉」が出てきます。"},
+{s:"rika",u:"植物の育ち方",q:"植物が育つ順番として正しいのは？",c:["種→子葉→葉が増える→花→実","種→花→葉→実","花→種→葉→実","実→種→花→葉"],e:"種をまいてから、子葉→葉が増える→花がさく→実ができる、の順に育ちます。"},
+{s:"rika",u:"植物の育ち方",q:"植物の体は主に何という3つの部分からできている？",c:["根・くき・葉","根・花・実","くき・花・種","葉・花・種"],e:"植物の体は「根・くき・葉」の3つの部分からできています。"},
+{s:"rika",u:"植物の育ち方",q:"植物が育つために日光と同じくらい大切なものは？",c:["水","音","風","暗さ"],e:"植物は日光と水がないと元気に育ちません。"},
+{s:"rika",u:"植物の育ち方",q:"ヒマワリの花はどんな向きに動くことがある？",c:["太陽の方向","月の方向","風上","地面"],e:"ヒマワリのつぼみは、太陽の光を求めて太陽の方向に動くことがあります。"},
+/* ===== 理科・こん虫のからだ ===== */
+{s:"rika",u:"こん虫のからだ",q:"こん虫のからだは何という3つの部分に分かれている？",c:["頭・胸・腹","頭・首・尾","頭・胴・足","顔・胸・尾"],e:"こん虫のからだは「頭・胸・腹」の3つに分かれています。"},
+{s:"rika",u:"こん虫のからだ",q:"こん虫のあしは何本？",c:["6本","4本","8本","10本"],e:"こん虫のあしは6本と決まっています。"},
+{s:"rika",u:"こん虫のからだ",q:"こん虫のあしがついている部分は？",c:["胸","頭","腹","首"],e:"6本のあしは、すべて胸についています。"},
+{s:"rika",u:"こん虫のからだ",q:"チョウが育つ順番として正しいのは？",c:["卵→幼虫→さなぎ→成虫","卵→さなぎ→幼虫→成虫","幼虫→卵→さなぎ→成虫","卵→成虫→幼虫→さなぎ"],e:"チョウは卵→幼虫（イモムシ）→さなぎ→成虫の順に育ちます。"},
+{s:"rika",u:"こん虫のからだ",q:"クモはこん虫のなかまか？",c:["こん虫ではない（あしが8本）","こん虫である","こん虫より進化した生き物","半分だけこん虫"],e:"クモはあしが8本あり、こん虫（あし6本）のなかまではありません。"},
+/* ===== 理科・風とゴムのはたらき ===== */
+{s:"rika",u:"風とゴムのはたらき",q:"風の力を強くすると、車の進むきょりはどうなる？",c:["遠くまで進む","近くで止まる","変わらない","逆に進む"],e:"風を強くするほど、車を押す力が大きくなるので遠くまで進みます。"},
+{s:"rika",u:"風とゴムのはたらき",q:"ゴムを長くのばすほど、車の進む力は？",c:["強くなる","弱くなる","変わらない","0になる"],e:"ゴムを長くのばすほど、元にもどろうとする力が大きくなります。"},
+{s:"rika",u:"風とゴムのはたらき",q:"風の力で物を動かすとき、力のもとになっているのは？",c:["空気の流れ","太陽の光","磁力","電気"],e:"風は空気が流れる（動く）ことで生まれる力です。"},
+{s:"rika",u:"風とゴムのはたらき",q:"ゴムのはたらきを利用したおもちゃの動く力は、何をもとにしている？",c:["ゴムがもとにもどろうとする力","風の力","電池の力","重さの力"],e:"のばしたゴムが元の長さにもどろうとする力を利用しています。"},
+{s:"rika",u:"風とゴムのはたらき",q:"送風機（風を送る機械）の風を強くすると、車のタイヤの動きは？",c:["速く回る","遅く回る","止まる","逆に回る"],e:"風の力が強いほど、車を動かす力が大きくなり、タイヤも速く回ります。"},
+/* ===== 理科・光のせいしつ ===== */
+{s:"rika",u:"光のせいしつ",q:"鏡を使うと光をどうすることができる？",c:["はね返す","消す","止める","曲げる"],e:"鏡は光をはね返す（反射させる）性質があります。"},
+{s:"rika",u:"光のせいしつ",q:"鏡ではね返した日光を1まいより多く重ねて集めると、明るさは？",c:["より明るくなる","暗くなる","変わらない","消える"],e:"鏡の枚数を増やすほど、集まる光が増えて明るく、あたたかくなります。"},
+{s:"rika",u:"光のせいしつ",q:"虫めがねで日光を集めると、集めたところは？",c:["あつくなる","つめたくなる","暗くなる","何も変わらない"],e:"虫めがねで日光を小さな点に集めると、そこはとてもあつくなります。"},
+{s:"rika",u:"光のせいしつ",q:"光がまっすぐに進む性質を何という？",c:["光の直進","光の反射","光の屈折","光の分散"],e:"光がまっすぐ進む性質を「光の直進」といいます。"},
+{s:"rika",u:"光のせいしつ",q:"鏡にうつる自分の姿は、右手を上げると鏡の中では？",c:["反対の手（向かって左）が上がって見える","右手が上がって見える","両手が上がって見える","動かない"],e:"鏡にうつる自分の姿は左右が逆になって見えます。"},
+/* ===== 理科・じしゃくのせいしつ ===== */
+{s:"rika",u:"じしゃくのせいしつ",q:"じしゃくが引きつけるのはどんな物？",c:["鉄","紙","木","ガラス"],e:"じしゃくは鉄でできた物を引きつけます。"},
+{s:"rika",u:"じしゃくのせいしつ",q:"じしゃくには何極と何極がある？",c:["N極とS極","A極とB極","正極と負極","東極と西極"],e:"じしゃくにはN極とS極の2つの極があります。"},
+{s:"rika",u:"じしゃくのせいしつ",q:"じしゃくの同じ極どうしを近づけると？",c:["しりぞけ合う（反発する）","引き合う","何も起きない","くっついたままになる"],e:"N極どうし、S極どうしなど同じ極は反発します。"},
+{s:"rika",u:"じしゃくのせいしつ",q:"じしゃくのちがう極どうしを近づけると？",c:["引き合う","しりぞけ合う","何も起きない","熱くなる"],e:"N極とS極のように、ちがう極は引き合います。"},
+{s:"rika",u:"じしゃくのせいしつ",q:"方位じしんの針が指す向きは、いつも同じ2つの方位のどちらかを指す。それは？",c:["北と南","東と西","上と下","決まっていない"],e:"方位じしんの針は、いつもN極が北、S極が南を指します。"},
+/* ===== 理科・電気の通り道 ===== */
+{s:"rika",u:"電気の通り道",q:"豆電球に明かりをつけるために必要なもの2つは？",c:["かん電池と導線","水と導線","磁石と紙","太陽の光と鏡"],e:"かん電池と導線を輪のようにつなぐと、豆電球に明かりがつきます。"},
+{s:"rika",u:"電気の通り道",q:"電気の通り道が輪のようにつながっていることを何という？",c:["回路","電流","電源","導線"],e:"電気が流れる輪のような道を「回路」といいます。"},
+{s:"rika",u:"電気の通り道",q:"回路の中で電気を通す物はどれ？",c:["金属（鉄やアルミニウムなど）","紙","木","ガラス"],e:"金属は電気を通しますが、紙や木、ガラスは電気を通しません。"},
+{s:"rika",u:"電気の通り道",q:"回路の途中が切れていると、豆電球は？",c:["つかない","さらに明るくつく","一瞬だけつく","色が変わる"],e:"回路がどこか切れていると、電気が流れず豆電球はつきません。"},
+{s:"rika",u:"電気の通り道",q:"かん電池の向きを逆にすると、モーターの回る向きは？",c:["逆になる","変わらない","止まる","速くなる"],e:"かん電池の向きを逆にすると、電気の流れる向きが逆になり、モーターも逆に回ります。"},
+/* ===== 理科・ものと重さ ===== */
+{s:"rika",u:"ものと重さ",q:"ねん土の形を変えると、重さはどうなる？",c:["変わらない","重くなる","軽くなる","なくなる"],e:"形を変えても、ねん土の量は変わらないので重さも変わりません。"},
+{s:"rika",u:"ものと重さ",q:"同じ体積の鉄と発泡スチロールでは、どちらが重い？",c:["鉄","発泡スチロール","同じ重さ","くらべられない"],e:"同じ体積でも、物によって重さはちがいます。鉄の方がずっと重いです。"},
+{s:"rika",u:"ものと重さ",q:"物の重さをはかる道具はどれ？",c:["はかり","ものさし","温度計","虫めがね"],e:"重さをはかるときは、はかり（てんびんやデジタルはかりなど）を使います。"},
+{s:"rika",u:"ものと重さ",q:"紙を細かく切ると、切った紙全部の重さは？",c:["変わらない","軽くなる","重くなる","半分になる"],e:"切って形を変えても、全部を合わせた重さは変わりません。"},
+{s:"rika",u:"ものと重さ",q:"1円玉1こは約何gですか？",c:["約1g","約10g","約100g","約0.1g"],e:"1円玉1こはちょうど約1gです。重さの基準としてよく使われます。"},
+/* ===== 社会・地図記号と方位 ===== */
+{s:"shakai",u:"地図記号と方位",q:"「文」の形の地図記号は何を表す？",c:["学校","図書館","工場","神社"],e:"「文」の字をかたどった地図記号は「学校」を表します。"},
+{s:"shakai",u:"地図記号と方位",q:"地図でふつう、上の方位はどれ？",c:["北","南","東","西"],e:"多くの地図では、上が北になるように作られています。"},
+{s:"shakai",u:"地図記号と方位",q:"郵便局を表す地図記号は？",c:["〒","＋","卍","田"],e:"〒マークは郵便局の地図記号です。"},
+{s:"shakai",u:"地図記号と方位",q:"「⛩」の形の地図記号は何を表す？",c:["神社","お寺","学校","郵便局"],e:"鳥居（とりい）の形をした記号は「神社」を表します。"},
+{s:"shakai",u:"地図記号と方位",q:"「卍」の形の地図記号は何を表す？",c:["お寺","神社","学校","病院"],e:"「卍」の記号は「お寺」を表します。"},
+{s:"shakai",u:"地図記号と方位",q:"東西南北のような方位を調べる道具は？",c:["方位じしん","ものさし","虫めがね","はかり"],e:"方位じしんの針を使うと、北や南などの方位がわかります。"},
+/* ===== 社会・店ではたらく人 ===== */
+{s:"shakai",u:"店ではたらく人",q:"スーパーマーケットで、新せんな食品をたくさん売るための工夫は？",c:["品物を毎日仕入れる","品物をずっと同じにする","品物を少なくする","値段を見えなくする"],e:"毎日新しい品物を仕入れることで、新せんな食品を売ることができます。"},
+{s:"shakai",u:"店ではたらく人",q:"レジでお金を払うときに使えるカードなどを何という？",c:["電子マネー（キャッシュレス）","商品券だけ","現金だけ","何も使えない"],e:"現金のほかに、カードなどで支払う電子マネーが使えるお店が増えています。"},
+{s:"shakai",u:"店ではたらく人",q:"お店が品物にはる、産地や賞味期限を書いた札を何という？",c:["表示（ラベル）","広告","レシート","ポスター"],e:"品物には、どこで作られたか、いつまで食べられるかなどを書いた表示（ラベル）がついています。"},
+{s:"shakai",u:"店ではたらく人",q:"スーパーマーケットで働く人の仕事にふくまれないのは？",c:["消防車の運転","品物をならべる","レジでお会計をする","品物を運ぶ"],e:"消防車の運転は消防署の仕事です。スーパーマーケットの仕事ではありません。"},
+{s:"shakai",u:"店ではたらく人",q:"店が遠くの産地から品物を仕入れる方法は？",c:["トラックや船などで運ぶ","全部その場で作る","何もしない","買い物客が取りに行く"],e:"遠くでとれた品物は、トラックや船、飛行機などで店まで運ばれます。"},
+/* ===== 社会・工場でつくられる物 ===== */
+{s:"shakai",u:"工場でつくられる物",q:"工場で品物をたくさん、同じように作るために使われる物は？",c:["機械","方位じしん","虫めがね","てんびん"],e:"工場では機械を使って、同じ品物をたくさん作ります。"},
+{s:"shakai",u:"工場でつくられる物",q:"工場で作られた品物を、お店まで運ぶのに多く使われる乗り物は？",c:["トラック","ひこうき","ロケット","ヨット"],e:"工場からお店へは、トラックで運ばれることが多いです。"},
+{s:"shakai",u:"工場でつくられる物",q:"工場で働く人たちが気をつけていることは？",c:["安全に、まちがいなく作ること","できるだけ早く終わらせて帰ること","見た目だけをよくすること","何も気をつけない"],e:"工場で働く人は、安全に、まちがいのない品物を作れるように気をつけています。"},
+{s:"shakai",u:"工場でつくられる物",q:"地域でとれた野菜や魚などを売る場所は？",c:["市場（いちば）","消防署","図書館","交番"],e:"とれた品物は市場に集められ、そこからお店などに送られます。"},
+{s:"shakai",u:"工場でつくられる物",q:"地域で作られた品物が、他の地域や外国に運ばれて売られることを何という？",c:["出荷（しゅっか）","入学","発表","貯金"],e:"作られた品物を運び出して売ることを「出荷」といいます。"},
+/* ===== 社会・火事をふせぐしごと ===== */
+{s:"shakai",u:"火事をふせぐしごと",q:"火事が起きたときに来て、消火活動をする人たちがいる場所は？",c:["消防署","交番","病院","郵便局"],e:"消防署には消防車や消防士がいて、火事のときに出動します。"},
+{s:"shakai",u:"火事をふせぐしごと",q:"火事の知らせを受けると、消防車はどれくらいで出動する？",c:["できるだけ早く（すぐに）","1週間後","ゆっくり","出動しない"],e:"火事は広がるのが早いため、消防車はできるだけ早く出動します。"},
+{s:"shakai",u:"火事をふせぐしごと",q:"火事を知らせる電話番号は？",c:["119番","110番","118番","117番"],e:"火事や救急は119番、事件や事故は110番に電話します。"},
+{s:"shakai",u:"火事をふせぐしごと",q:"消防署の人たちが、火事が起きる前にしていることは？",c:["訓練や点検","何もしない","休む","遊ぶ"],e:"消防署の人は、いつでもすぐ動けるように日ごろから訓練や道具の点検をしています。"},
+{s:"shakai",u:"火事をふせぐしごと",q:"家にある、火事を早く知らせるための道具は？",c:["火災報知器（けむりを感じる機械）","方位じしん","虫めがね","温度計だけ"],e:"けむりを感じると音で知らせる火災報知器が、多くの家についています。"},
+/* ===== 社会・事故や事件をふせぐしごと ===== */
+{s:"shakai",u:"事故や事件をふせぐしごと",q:"事故や事件が起きたときに助けてくれる人たちがいる場所は？",c:["交番・警察署","消防署","図書館","郵便局"],e:"交番や警察署には警察官がいて、事故や事件のときに助けてくれます。"},
+{s:"shakai",u:"事故や事件をふせぐしごと",q:"事件や事故を知らせる電話番号は？",c:["110番","119番","118番","117番"],e:"事件や事故は110番、火事や救急は119番に電話します。"},
+{s:"shakai",u:"事故や事件をふせぐしごと",q:"通学路にいて、子どもたちを見守ってくれる人を何という？",c:["見守り隊（地域の人）","消防士","郵便配達員","農家の人"],e:"地域のボランティアの人たちが、通学路で子どもたちを見守っています。"},
+{s:"shakai",u:"事故や事件をふせぐしごと",q:"道路で信号や横断歩道があるのは何のため？",c:["安全に道路をわたるため","車を速く走らせるため","道路をかざるため","音を鳴らすため"],e:"信号や横断歩道は、人が安全に道路をわたれるようにするためのものです。"},
+{s:"shakai",u:"事故や事件をふせぐしごと",q:"警察の人たちが交通事故を防ぐためにしていることは？",c:["パトロールや交通整理","消火活動","郵便を配ること","授業をすること"],e:"警察官はパトロールをしたり、交差点で交通整理をしたりして事故を防いでいます。"},
+/* ===== 社会・市のうつりかわり ===== */
+{s:"shakai",u:"市のうつりかわり",q:"昔の道具で、今の炊飯器のかわりに使われていたものは？",c:["かまど","冷蔵庫","せんたく機","テレビ"],e:"昔はかまどで火をたいて、ご飯をたいていました。"},
+{s:"shakai",u:"市のうつりかわり",q:"昔は洗たくをするとき、何を使っていた？",c:["たらいと洗たく板","せんたく機","ドライヤー","電子レンジ"],e:"昔はたらいと洗たく板を使い、手で洗たくをしていました。"},
+{s:"shakai",u:"市のうつりかわり",q:"昔と今をくらべる学習で使う、昔の道具が展示されている場所は？",c:["資料館（郷土資料館）","消防署","交番","工場"],e:"昔のくらしの道具は、資料館（郷土資料館）などで見ることができます。"},
+{s:"shakai",u:"市のうつりかわり",q:"昔の明かりに使われていたものは？",c:["ろうそくやランプ","電球","LED","けい光灯"],e:"電気が広まる前は、ろうそくやランプの明かりが使われていました。"},
+{s:"shakai",u:"市のうつりかわり",q:"交通の移り変わりで、昔たくさん使われていた乗り物は？",c:["人力車や馬車","新幹線","ひこうき","ロケット"],e:"自動車が広まる前は、人が引く人力車や馬が引く馬車が使われていました。"},
+];
+
+/* ============ 学習進度（小3・3学期制の標準カリキュラム連動） ============ */
+/* 値＝その単元を習い始めるおおよその学年月（4月=1 … 3月=12）。
+   標準的な検定教科書の年間指導計画をもとにした目安。
+   まだ習っていない単元は今日のクエストに出ず、特訓で「先取り」だけできる。 */
+const CURRICULUM = {
+  "sansu|たし算とひき算の筆算":1, "sansu|かけ算の筆算":2, "sansu|わり算":4, "sansu|大きな数":6,
+  "sansu|長さ・重さ・かさ":7, "sansu|円と球":9, "sansu|三角形と分数":10,
+  "kokugo|漢字の読み書き":1, "kokugo|こそあど言葉":2, "kokugo|主語と述語":1,
+  "kokugo|ことわざ・慣用句":4, "kokugo|国語辞典の使い方":2, "kokugo|ローマ字":3,
+  "rika|植物の育ち方":1, "rika|こん虫のからだ":2, "rika|風とゴムのはたらき":1,
+  "rika|光のせいしつ":6, "rika|じしゃくのせいしつ":7, "rika|電気の通り道":9, "rika|ものと重さ":10,
+  "shakai|地図記号と方位":1, "shakai|店ではたらく人":3, "shakai|工場でつくられる物":6,
+  "shakai|火事をふせぐしごと":7, "shakai|事故や事件をふせぐしごと":8, "shakai|市のうつりかわり":10,
+};
+function schoolMonth(){ return ((new Date().getMonth()+1) - 4 + 12) % 12 + 1; } // 4月=1
+function termName(){ const sm=schoolMonth(); return sm<=5 ? "1学期" : sm<=9 ? "2学期" : "3学期"; }
+function monthLabel(sm){ return ((sm+2)%12+1) + "月"; }
+function unitUnlocked(s,u){ const sm = CURRICULUM[s+"|"+u]; return sm===undefined || sm <= schoolMonth(); }
+
+/* ============ バトルモード（勉強のじゃまをするモンスターたち） ============ */
+/* 正解＝こうげき、まちがい＝反撃を受ける。弱点教科の問題で正解すると2倍ダメージ。
+   バトル中の解答もふつうのクエストと同じく復習スケジュールに記録される。
+   小学生向けなので、こわすぎない・親しみやすいモンスターにしています。 */
+const PLAYER_HP = 30;
+const MONSTERS = [
+  {emoji:"🐛", name:"わすれむしくん",   lv:1,  hp:30, atk:4, weak:"sansu",  line:"「ならったこと、もうわすれちゃった？」"},
+  {emoji:"👻", name:"サボリおばけ",     lv:2,  hp:36, atk:5, weak:"kokugo", line:"「べんきょう、あとでいいよね〜？」"},
+  {emoji:"🐌", name:"のんびりカタツムリ", lv:3,  hp:42, atk:5, weak:"rika",   line:"「いそがなくて、だいじょうぶだいじょうぶ」"},
+  {emoji:"🦥", name:"ぐうたらナマケモノ", lv:4,  hp:48, atk:6, weak:"shakai", line:"「うごくの、めんどくさいなぁ」"},
+  {emoji:"🐺", name:"うっかりオオカミ", lv:5,  hp:54, atk:6, weak:"sansu",  line:"「おっと、うっかりミスをねらうぞ！」"},
+  {emoji:"🤖", name:"まるあんきロボ",   lv:6,  hp:60, atk:7, weak:"kokugo", line:"「イミガワカラナクテモ、オボエレバヨシ」"},
+  {emoji:"🐲", name:"にがてドラゴン",   lv:7,  hp:66, atk:7, weak:"rika",   line:"「にがてなきもち、もっと大きくしてやる！」"},
+  {emoji:"🦉", name:"よふかしふくろう", lv:8,  hp:72, atk:8, weak:"shakai", line:"「よるおそくまで おきてると、ねむくなるよ〜」"},
+  {emoji:"😼", name:"いいわけネコ",     lv:9,  hp:78, atk:8, weak:"sansu",  line:"「だって、つかれてたんだもん」"},
+  {emoji:"👑", name:"わすれんぼうキング", lv:10, hp:100, atk:10, weak:null,  line:"「みんなのきおくを、ぜんぶわすれさせてやる！」"},
+];
+
+/* ============ 学習エンジン（間隔反復・Leitner+SM-2簡易版） ============ */
+const DAY = 24*60*60*1000;
+const INTERVALS = [0, 1, 3, 7, 14, 30]; // stage→次に出すまでの日数
+const MASTER_STAGE = 3;                 // 7日以上あけて思い出せた＝マスター扱い
+const QUEST_SIZE = 8, PRACTICE_SIZE = 6; // 小学生の学習容量に合わせて、中学生版より少なめに設定
+
+const KEY = "manabiQuestElem3V1";
+let S = load();
+function load(){
+  try{
+    const d = JSON.parse(localStorage.getItem(KEY));
+    if(d && d.items) return d;
+  }catch(e){}
+  return {xp:0, answered:0, correct:0, reviewDone:0, sessions:0,
+          streak:0, lastDay:null, badges:[], perfectRuns:0, items:{}, sound:true,
+          battle:{stage:0, wins:0, losses:0, maxCombo:0}};
+}
+/* 旧バージョンの保存データにはbattleがないため補完 */
+if(!S.battle) S.battle = {stage:0, wins:0, losses:0, maxCombo:0};
+function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
+function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+
+function itemState(id){ return S.items[id]; }
+function dueIds(){
+  const now = Date.now();
+  return Object.keys(S.items).filter(id => S.items[id].due <= now).map(Number);
+}
+function newUnlockedIds(){
+  // 新しい問題は「もう習った単元」だけから出す（予約済みの復習は単元にかかわらず出る）
+  return BANK.map((_,i)=>i).filter(i => !S.items[i] && unitUnlocked(BANK[i].s, BANK[i].u));
+}
+function scheduleAnswer(id, firstTryCorrect, retried){
+  let st = S.items[id];
+  if(!st){ st = S.items[id] = {stage:0, due:0, seen:0, right:0, wrong:0}; }
+  st.seen++;
+  if(firstTryCorrect){
+    st.right++;
+    st.stage = Math.min(st.stage+1, INTERVALS.length-1);
+  }else if(retried){ // セッション内で間違えたあと正解
+    st.right++;
+    st.stage = 1;
+  }else{ // 間違い
+    st.wrong++;
+    st.stage = 0;
+  }
+  st.due = Date.now() + INTERVALS[st.stage]*DAY;
+  save();
+}
+
+/* レベル: 必要XPが少しずつ増える */
+const TITLES = ["見習い","冒険者","探求者","戦士","騎士","賢者","大賢者","勇者","覇者","伝説の勇者"];
+function levelInfo(xp){
+  let lvl=1, need=100, base=0;
+  while(xp >= base+need){ base+=need; lvl++; need=100+ (lvl-1)*40; }
+  return {lvl, cur:xp-base, need, title:TITLES[Math.min(TITLES.length-1, Math.floor((lvl-1)/3))]};
+}
+
+/* バッジ */
+const BADGES = [
+  {id:"first",   emoji:"🎯", name:"はじめの一歩",   desc:"はじめてのクエストをクリア",           check:()=>S.sessions>=1},
+  {id:"streak4", emoji:"🔥", name:"三日坊主 卒業",  desc:"4日連続で学習",                        check:()=>S.streak>=4},
+  {id:"streak7", emoji:"🏅", name:"週間ヒーロー",   desc:"7日連続で学習",                        check:()=>S.streak>=7},
+  {id:"c100",    emoji:"⚔️", name:"百戦錬磨",       desc:"のべ100問に正解",                      check:()=>S.correct>=100},
+  {id:"all4",    emoji:"🌈", name:"四教科の旅人",   desc:"4教科すべてで正解する",                check:()=>Object.keys(SUBJECTS).every(s=>BANK.some((q,i)=>q.s===s&&S.items[i]&&S.items[i].right>0))},
+  {id:"perfect", emoji:"💎", name:"パーフェクト",   desc:"クエストを全問一発正解でクリア",       check:()=>S.perfectRuns>=1},
+  {id:"rev50",   emoji:"🔁", name:"復習マスター",   desc:"復習問題を50問クリア",                 check:()=>S.reviewDone>=50},
+  {id:"m30",     emoji:"🧠", name:"記憶の達人",     desc:"30問をマスター（7日以上あけて正解）",   check:()=>Object.values(S.items).filter(st=>st.stage>=MASTER_STAGE).length>=30},
+  {id:"btl1",    emoji:"🥊", name:"バトルデビュー", desc:"バトルではじめて勝利する",             check:()=>S.battle.wins>=1},
+  {id:"btl10",   emoji:"🛡️", name:"連戦連勝",       desc:"バトルで10勝する",                     check:()=>S.battle.wins>=10},
+  {id:"combo5",  emoji:"⚡", name:"れんげきの芽",   desc:"バトルで5連続正解コンボを決める",       check:()=>S.battle.maxCombo>=5},
+  {id:"combo50", emoji:"🔥", name:"れんげきの達人", desc:"バトルで50連続正解コンボを決める",      check:()=>S.battle.maxCombo>=50},
+  {id:"combo200",emoji:"💥", name:"れんげきの覇者", desc:"バトルで200連続正解コンボを決める",     check:()=>S.battle.maxCombo>=200},
+  {id:"combo999",emoji:"👑", name:"コンボマスター", desc:"バトルで999連続正解コンボを決める（コンボの最大値）", check:()=>S.battle.maxCombo>=999},
+  {id:"champ",   emoji:"🏆", name:"まなびチャンピオン", desc:"すべてのモンスターを倒す",         check:()=>S.battle.stage>=MONSTERS.length},
+];
+function checkNewBadges(){
+  const got = BADGES.filter(b=>!S.badges.includes(b.id) && b.check());
+  got.forEach(b=>S.badges.push(b.id));
+  return got;
+}
+/* 連続日数はクエストでもバトルでも更新される */
+function updateStreak(){
+  const today = todayStr();
+  if(S.lastDay !== today){
+    const y = new Date(); y.setDate(y.getDate()-1);
+    const yStr = y.getFullYear()+"-"+String(y.getMonth()+1).padStart(2,"0")+"-"+String(y.getDate()).padStart(2,"0");
+    S.streak = (S.lastDay===yStr) ? S.streak+1 : 1;
+    S.lastDay = today;
+  }
+}
+
+/* ============ 効果音（WebAudio） ============ */
+let audioCtx = null;
+function beep(freqs, dur){
+  if(!S.sound) return;
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    freqs.forEach((f,i)=>{
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type="sine"; o.frequency.value=f;
+      g.gain.setValueAtTime(0.12, audioCtx.currentTime + i*dur);
+      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (i+1)*dur);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(audioCtx.currentTime + i*dur); o.stop(audioCtx.currentTime + (i+1)*dur);
+    });
+  }catch(e){}
+}
+const soundOK = ()=>beep([660,880],0.12);
+const soundNG = ()=>beep([220,180],0.18);
+const soundLv = ()=>beep([523,659,784,1047],0.13);
+const soundAtk = ()=>beep([880,660,990],0.08);
+const soundWin = ()=>beep([523,659,784,1047,1319],0.12);
+const soundLose= ()=>beep([330,262,196],0.22);
+
+/* ============ ユーティリティ ============ */
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+/* 同じ教科が連続しないように並べ替え（インターリービング） */
+function interleave(ids){
+  const pool = shuffle(ids), out = [];
+  while(pool.length){
+    let idx = pool.findIndex(id => !out.length || BANK[id].s !== BANK[out[out.length-1]].s);
+    if(idx === -1) idx = 0;
+    out.push(pool.splice(idx,1)[0]);
+  }
+  return out;
+}
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+/* ============ 画面 ============ */
+const app = document.getElementById("app");
+let currentTab = "home";
+
+function nav(tab){
+  currentTab = tab;
+  document.getElementById("nav").innerHTML = [
+    ["home","🏠","ホーム"],["battle","⚔️","バトル"],["train","💪","特訓"],["badges","🏆","バッジ"],["science","🧠","しくみ"]
+  ].map(([t,ico,label]) =>
+    `<button class="${t===tab?"active":""}" onclick="go('${t}')"><span class="ico">${ico}</span>${label}</button>`
+  ).join("");
+}
+function go(tab){
+  nav(tab);
+  if(tab==="home") renderHome();
+  else if(tab==="battle") renderBattle();
+  else if(tab==="train") renderTrain();
+  else if(tab==="badges") renderBadges();
+  else if(tab==="science") renderScience();
+}
+window.go = go;
+
+/* ---- ホーム ---- */
+function renderHome(){
+  const lv = levelInfo(S.xp);
+  const due = dueIds().length, fresh = newUnlockedIds().length;
+  const mastered = Object.values(S.items).filter(st=>st.stage>=MASTER_STAGE).length;
+  const acc = S.answered ? Math.round(S.correct/S.answered*100) : 0;
+
+  const masteryRows = Object.entries(SUBJECTS).map(([key,sub])=>{
+    const ids = BANK.map((q,i)=>[q,i]).filter(([q])=>q.s===key);
+    const m = ids.filter(([q,i])=>S.items[i] && S.items[i].stage>=MASTER_STAGE).length;
+    const pct = Math.round(m/ids.length*100);
+    return `<div class="row" style="margin-bottom:8px">
+      <span style="width:64px;font-size:13px">${sub.emoji} ${sub.name}</span>
+      <div class="masterybar grow"><div style="width:${pct}%;background:${sub.color}"></div></div>
+      <span class="sub" style="width:56px;text-align:right">${m}/${ids.length}</span>
+    </div>`;
+  }).join("");
+
+  app.innerHTML = `
+    <div class="row" style="margin-bottom:12px">
+      <h1>⚔️ まなびクエスト <span class="pill">小3</span></h1>
+      <div class="grow"></div>
+      <button class="btn-ghost" onclick="toggleSound()">${S.sound?"🔊":"🔇"}</button>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <div class="streak-flame">${S.streak>0?"🔥":"🕯️"}</div>
+        <div class="grow">
+          <div class="big">${S.streak}日連続</div>
+          <div class="sub">${S.lastDay===todayStr()?"今日の学習 済み！":"今日もコツコツ、記憶は毎日の復習で定着します"}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="margin-bottom:6px">
+        <span class="pill" style="background:linear-gradient(135deg,#5b7cfa,#8a5bfa)">Lv.${lv.lvl} ${lv.title}</span>
+        <div class="grow"></div>
+        <span class="sub">${lv.cur} / ${lv.need} XP</span>
+      </div>
+      <div class="xpbar"><div style="width:${Math.round(lv.cur/lv.need*100)}%"></div></div>
+      <div class="stat3">
+        <div><div class="v">${due}</div><div class="k">今日の復習</div></div>
+        <div><div class="v">${mastered}</div><div class="k">マスター済み</div></div>
+        <div><div class="v">${acc}%</div><div class="k">正答率</div></div>
+      </div>
+      <button class="btn-main" onclick="startQuest()">▶ 今日のクエストに出発（${QUEST_SIZE}問）</button>
+      <button class="btn-sub" onclick="go('battle')">⚔️ まなびバトルで腕だめし${S.battle.stage<MONSTERS.length?`（つぎの相手：${MONSTERS[S.battle.stage].emoji} ${MONSTERS[S.battle.stage].name}）`:"（全モンスター制覇！）"}</button>
+      <div class="sub center" style="margin-top:8px">復習${Math.min(due,QUEST_SIZE)}問 ＋ 新しい問題${Math.max(0,Math.min(QUEST_SIZE-due, fresh))}問を教科ミックスで出題<br>📚 小3・${termName()}（〜${monthLabel(schoolMonth())}）に習う単元から。未習単元は「特訓」で先取りできます</div>
+    </div>
+
+    <div class="card">
+      <h2>📊 教科べつマスター度</h2>
+      ${masteryRows}
+      <div class="sub" style="margin-top:6px">「マスター」＝7日以上間隔をあけても思い出せた問題。全${BANK.length}問収録。</div>
+    </div>`;
+}
+window.toggleSound = ()=>{ S.sound=!S.sound; save(); renderHome(); };
+
+/* ---- 特訓（単元べつ） ---- */
+function renderTrain(){
+  const units = {};
+  BANK.forEach((q,i)=>{
+    const k = q.s+"|"+q.u;
+    (units[k] = units[k] || {s:q.s,u:q.u,ids:[]}).ids.push(i);
+  });
+  const bySub = {};
+  Object.values(units).forEach(u=>{ (bySub[u.s]=bySub[u.s]||[]).push(u); });
+
+  app.innerHTML = `<h1 style="margin-bottom:12px">💪 単元べつ特訓</h1>
+    <div class="sub" style="margin-bottom:12px">苦手な単元をねらいうち。ここでの成績も復習スケジュールに反映されます。<br>🔒はまだ習っていない単元（タップで先取り学習もOK）。</div>` +
+    Object.entries(SUBJECTS).map(([key,sub])=>`
+      <div class="card">
+        <h2>${sub.emoji} ${sub.name}</h2>
+        ${(bySub[key]||[]).map(u=>{
+          const m = u.ids.filter(i=>S.items[i]&&S.items[i].stage>=MASTER_STAGE).length;
+          const seen = u.ids.filter(i=>S.items[i]).length;
+          const locked = !unitUnlocked(key, u.u);
+          const chip = locked ? `🔒 ${monthLabel(CURRICULUM[key+"|"+u.u])}ごろ〜`
+                              : (seen===0 ? "未挑戦" : `⭐${m}/${u.ids.length}`);
+          return `<button class="unit-btn" style="${locked?"opacity:.55":""}" onclick="startPractice('${key}','${esc(u.u)}')">
+            <span class="grow">${esc(u.u)}</span>
+            <span class="duechip">${chip}</span>
+            <span style="color:${sub.color}">▶</span>
+          </button>`;
+        }).join("")}
+      </div>`).join("");
+}
+window.startPractice = (s,u)=>{
+  if(!unitUnlocked(s,u)){
+    const sm = CURRICULUM[s+"|"+u];
+    if(!confirm(`「${u}」は${monthLabel(sm)}ごろに習う単元です。\n先取り学習に挑戦しますか？`)) return;
+  }
+  const ids = BANK.map((q,i)=>[q,i]).filter(([q])=>q.s===s&&q.u===u).map(([,i])=>i);
+  // 未学習・低ステージ優先で出題
+  ids.sort((a,b)=>{
+    const sa=S.items[a]?S.items[a].stage:-1, sb=S.items[b]?S.items[b].stage:-1;
+    return sa-sb || Math.random()-0.5;
+  });
+  startSession(shuffle(ids.slice(0,PRACTICE_SIZE)), `${SUBJECTS[s].name}・${u} 特訓`);
+};
+
+/* ---- クエスト開始 ---- */
+window.startQuest = ()=>{
+  const due = shuffle(dueIds()).slice(0, QUEST_SIZE);
+  let queue = due.slice();
+  if(queue.length < QUEST_SIZE){
+    // 教科がかたよらないよう新規問題をラウンドロビンで補充（習った単元のみ）
+    const fresh = newUnlockedIds();
+    const bySub = {};
+    shuffle(fresh).forEach(i=>{ (bySub[BANK[i].s]=bySub[BANK[i].s]||[]).push(i); });
+    const subs = shuffle(Object.keys(bySub));
+    let k=0;
+    while(queue.length < QUEST_SIZE && subs.some(s=>bySub[s].length)){
+      const s = subs[k++ % subs.length];
+      if(bySub[s].length) queue.push(bySub[s].pop());
+    }
+  }
+  if(!queue.length){ alert("いま習っている範囲の問題はぜんぶクリア済み！\nまた明日きてね🌙（「特訓」タブから先取り学習もできます）"); return; }
+  startSession(interleave(queue), "今日のクエスト");
+};
+
+/* ---- セッション（出題エンジン） ---- */
+let sess = null;
+function startSession(ids, title){
+  if(!ids.length){ go("home"); return; }
+  sess = {
+    title, queue:ids.slice(), total:ids.length,
+    wrongOnce:new Set(), cleared:new Set(),
+    firstTryCorrect:0, gainedXp:0, reviewCount:ids.filter(i=>S.items[i]).length,
+    answeredThisQ:false,
+  };
+  nextQuestion();
+}
+function nextQuestion(){
+  if(!sess.queue.length){ finishSession(); return; }
+  const id = sess.queue[0];
+  const q = BANK[id];
+  const sub = SUBJECTS[q.s];
+  // 選択肢シャッフル（c[0]が正解）
+  const order = shuffle([0,1,2,3]);
+  sess.currentOrder = order;
+  sess.answeredThisQ = false;
+
+  const pct = Math.round(sess.cleared.size / sess.total * 100);
+  app.innerHTML = `
+    <div class="row">
+      <button class="btn-ghost" onclick="quitSession()">✕ やめる</button>
+      <div class="grow"></div>
+      <span class="pill">${esc(sess.title)}</span>
+    </div>
+    <div class="progress"><div style="width:${pct}%"></div></div>
+    <div class="sub center">${sess.cleared.size} / ${sess.total} クリア ${sess.wrongOnce.has(id)?"（リベンジ問題！）":""}</div>
+    <div class="card" style="margin-top:12px">
+      <div class="row">
+        <span class="pill" style="border-color:${sub.color};color:${sub.color}">${sub.emoji} ${sub.name}｜${esc(q.u)}</span>
+        <div class="grow"></div>
+        ${S.items[id]?'<span class="duechip">🔁 復習</span>':'<span class="duechip">✨ 新問題</span>'}
+      </div>
+      <div class="qtext">${esc(q.q)}</div>
+      <div id="choices">
+        ${order.map((ci,pos)=>`<button class="choice" id="ch${pos}" onclick="answer(${pos})">${"❶❷❸❹"[pos]} ${esc(q.c[ci])}</button>`).join("")}
+      </div>
+      <div id="fb"></div>
+    </div>
+    <div class="sub center">キーボードの 1〜4 でも答えられます</div>`;
+}
+window.quitSession = ()=>{ if(confirm("クエストを中断しますか？（ここまでの記録は保存済み）")) go("home"); };
+
+window.answer = (pos)=>{
+  if(!sess || sess.answeredThisQ) return;
+  sess.answeredThisQ = true;
+  const id = sess.queue.shift();
+  const q = BANK[id];
+  const chosen = sess.currentOrder[pos];
+  const correct = (chosen === 0);
+  const correctPos = sess.currentOrder.indexOf(0);
+  const wasWrongBefore = sess.wrongOnce.has(id);
+  const wasReview = !!S.items[id];
+
+  // ボタンの見た目更新
+  for(let p=0;p<4;p++){
+    const el = document.getElementById("ch"+p);
+    el.disabled = true;
+    if(p===correctPos) el.classList.add("correct");
+    else if(p===pos) el.classList.add("wrong");
+    else el.classList.add("dim");
+  }
+
+  let fbHtml;
+  if(correct){
+    soundOK();
+    const xp = wasWrongBefore ? 5 : 10;
+    S.xp += xp; sess.gainedXp += xp;
+    S.answered++; S.correct++;
+    if(!wasWrongBefore) sess.firstTryCorrect++;
+    if(wasReview && !wasWrongBefore) S.reviewDone++;
+    sess.cleared.add(id);
+    scheduleAnswer(id, !wasWrongBefore, wasWrongBefore);
+    const st = S.items[id];
+    const days = INTERVALS[st.stage];
+    fbHtml = `<div class="feedback ok"><b>⭕ 正解！ +${xp} XP</b><br>${esc(q.e)}<br>
+      <span class="sub">📅 次の復習：${days===0?"今日中":days+"日後"}（思い出す間隔を少しずつ広げると記憶が長持ちします）</span></div>
+      <button class="btn-main" onclick="nextQuestion()">次へ ▶</button>`;
+  }else{
+    soundNG();
+    S.answered++;
+    sess.wrongOnce.add(id);
+    sess.queue.push(id); // セッションの最後に再挑戦（正解するまで終わらない）
+    scheduleAnswer(id, false, false);
+    fbHtml = `<div class="feedback ng"><b>❌ ざんねん…正解は「${esc(q.c[0])}」</b><br>${esc(q.e)}<br>
+      <span class="sub">🔁 この問題はクエストの最後にもう一度出ます。自力で思い出せたら記憶に残ります！</span></div>
+      <button class="btn-main" onclick="nextQuestion()">次へ ▶</button>`;
+  }
+  save();
+  const fbEl = document.getElementById("fb");
+  fbEl.innerHTML = fbHtml;
+  ensureNextVisible();
+};
+
+/* 「次へ」ボタンが固定ナビの裏や画面外に隠れないよう、必要なぶんだけスクロールする。
+   scrollIntoViewは「ほぼ表示済み」と判断すると動かないため、ナビの高さを引いて自前で計算する。 */
+function ensureNextVisible(){
+  const fbEl = document.getElementById("fb");
+  const btn = fbEl && fbEl.querySelector("button");
+  if(!btn) return;
+  const navH = (document.querySelector("nav")||{}).offsetHeight || 74;
+  const gap = 16;
+  // innerHTML設定直後で同期的にレイアウトが取れるため、rAFを使わず即時にスクロールする
+  // （rAFはタブ非表示時に発火しないことがあり、smoothスクロールも一部環境で不発のため使わない）
+  const bottom = btn.getBoundingClientRect().bottom;        // ビューポート上端からの位置
+  const limit = window.innerHeight - navH - gap;            // ナビより上に確保したい下端
+  const overflow = bottom - limit;
+  if(overflow > 0) window.scrollBy(0, overflow);
+}
+
+document.addEventListener("keydown",(ev)=>{
+  if(btl){
+    if(ev.key>="1" && ev.key<="4" && !btl.answeredThisQ){
+      window.answerBattle(Number(ev.key)-1);
+    }else if(ev.key==="Enter" && btl.answeredThisQ){
+      ev.preventDefault(); // フォーカス中の古いボタンへのclick発火を防ぐ（進行不能・二重回答対策）
+      window.btlNext();
+    }
+    return;
+  }
+  if(!sess) return;
+  if(ev.key>="1" && ev.key<="4" && !sess.answeredThisQ){
+    const el = document.getElementById("ch"+(Number(ev.key)-1));
+    if(el) window.answer(Number(ev.key)-1);
+  }else if(ev.key==="Enter" && sess.answeredThisQ){
+    ev.preventDefault(); // フォーカス中の古いボタンへのclick発火を防ぐ（進行不能・二重回答対策）
+    nextQuestion();
+  }
+});
+window.nextQuestion = nextQuestion;
+
+/* ---- セッション終了 ---- */
+function finishSession(){
+  const perfect = sess.wrongOnce.size===0;
+  S.sessions++;
+  if(perfect) S.perfectRuns++;
+
+  updateStreak();
+  const newBadges = checkNewBadges();
+  save();
+
+  const lvBefore = levelInfo(S.xp - sess.gainedXp).lvl;
+  const lv = levelInfo(S.xp);
+  const leveledUp = lv.lvl > lvBefore;
+  if(leveledUp || newBadges.length) soundLv();
+
+  const acc = Math.round(sess.firstTryCorrect/sess.total*100);
+  const dueTomorrow = Object.values(S.items).filter(st=>st.due>Date.now() && st.due<=Date.now()+DAY).length;
+
+  const doneSess = sess; sess = null;
+  app.innerHTML = `
+    <div class="card center">
+      <div class="result-emoji">${perfect?"🏆":acc>=70?"🎉":"💪"}</div>
+      <h1>${perfect?"パーフェクトクリア！":"クエストクリア！"}</h1>
+      <div class="stat3">
+        <div><div class="v" style="color:var(--gold)">+${doneSess.gainedXp}</div><div class="k">獲得XP</div></div>
+        <div><div class="v">${acc}%</div><div class="k">一発正解率</div></div>
+        <div><div class="v">🔥${S.streak}</div><div class="k">連続日数</div></div>
+      </div>
+      ${leveledUp?`<div class="feedback ok" style="margin-bottom:10px"><b>🎊 レベルアップ！ Lv.${lv.lvl} ${lv.title} になった！</b></div>`:""}
+      ${newBadges.map(b=>`<div class="feedback ok" style="margin-bottom:10px"><b>${b.emoji} バッジ獲得「${b.name}」</b><br><span class="sub">${b.desc}</span></div>`).join("")}
+      <div class="sub" style="margin:8px 0 4px">明日の復習予定：${dueTomorrow}問<br>寝ている間に記憶は整理されます。また明日つづきをやろう！</div>
+      <button class="btn-main" onclick="go('home')">ホームへもどる</button>
+      <button class="btn-sub" onclick="startQuest()">もう1クエスト挑戦する</button>
+    </div>`;
+  nav("home");
+}
+
+/* ---- バトルモード ---- */
+let btl = null;
+
+function renderBattle(){
+  btl = null;
+  const B = S.battle;
+  const allClear = B.stage >= MONSTERS.length;
+  const rows = MONSTERS.map((m,i)=>{
+    const beaten = i < B.stage;
+    const current = i === B.stage;
+    const locked = i > B.stage;
+    const weakTxt = m.weak ? `よわ点: ${SUBJECTS[m.weak].emoji}${SUBJECTS[m.weak].name}` : "よわ点なし";
+    if(locked) return `<div class="monster-row locked"><span class="memoji">❓</span><div class="grow"><b>？？？</b><div class="sub">前のモンスターを倒すと登場</div></div>🔒</div>`;
+    return `<button class="monster-row ${beaten?"beaten":""}" onclick="startBattle(${i})">
+      <span class="memoji">${m.emoji}</span>
+      <div class="grow"><b>${m.name} <span class="sub">Lv.${m.lv}</span></b>
+        <div class="sub">HP ${m.hp}｜${weakTxt}</div></div>
+      <span>${beaten?"✅ 再戦":current?"⚔️ 挑戦！":""}</span>
+    </button>`;
+  }).join("");
+
+  app.innerHTML = `
+    <h1 style="margin-bottom:12px">⚔️ まなびバトル</h1>
+    <div class="card">
+      <div class="sub" style="line-height:1.8">勉強のじゃまをするモンスターがあらわれた！<br>
+      ⭕ <b>正解するとこうげき</b>（連続正解でコンボダメージUP）<br>
+      ❌ <b>まちがえると反撃</b>を受ける（きみのHPは${PLAYER_HP}）<br>
+      ✨ モンスターの<b>弱点教科</b>の問題で正解すると<b>2倍ダメージ</b>！<br>
+      バトル中の問題も、ふだんの復習スケジュールにちゃんと記録されます。</div>
+    </div>
+    ${allClear?`<div class="card center"><div class="result-emoji">👑</div><b>全モンスター制覇！まなびチャンピオン！</b><div class="sub" style="margin-top:6px">再戦していつでも腕だめしできます</div></div>`:""}
+    <div class="card">
+      <h2>😈 モンスター図鑑</h2>
+      ${rows}
+    </div>
+    <div class="card sub center">これまでの戦績：${B.wins}勝 ${B.losses}敗｜最大コンボ ⚡${B.maxCombo}</div>`;
+}
+
+function battleQueue(){
+  // 出題対象は習った単元のみ。復習期限が来ている問題を優先的に混ぜる
+  const due = shuffle(dueIds().filter(i=>unitUnlocked(BANK[i].s,BANK[i].u)));
+  const rest = shuffle(BANK.map((_,i)=>i).filter(i=>unitUnlocked(BANK[i].s,BANK[i].u) && !due.includes(i)));
+  return interleave(due.slice(0,15).concat(rest.slice(0,25)));
+}
+
+window.startBattle = (mi)=>{
+  const m = MONSTERS[mi];
+  btl = {mi, m, ehp:m.hp, php:PLAYER_HP, queue:battleQueue(), combo:0,
+         gainedXp:0, answeredThisQ:false, currentOrder:null, next:null};
+  nextBattleQuestion();
+};
+
+function hpClass(cur,max){ const r=cur/max; return r<=0.25?"danger":r<=0.5?"low":""; }
+
+function nextBattleQuestion(){
+  if(!btl.queue.length) btl.queue = battleQueue(); // 出題が尽きたら補充
+  const id = btl.queue[0];
+  const q = BANK[id];
+  const sub = SUBJECTS[q.s];
+  const m = btl.m;
+  btl.currentOrder = shuffle([0,1,2,3]);
+  btl.answeredThisQ = false;
+  btl.next = null;
+  const weakChip = m.weak===q.s ? `<span class="pill" style="border-color:var(--gold);color:var(--gold)">✨ 弱点教科！</span>` : "";
+
+  app.innerHTML = `
+    <div class="row">
+      <button class="btn-ghost" onclick="quitBattle()">✕ にげる</button>
+      <div class="grow"></div>
+      ${btl.combo>=2?`<span class="combo-chip">⚡${btl.combo}コンボ中</span>`:""}
+    </div>
+    <div class="card" style="padding:12px 16px">
+      <div class="row">
+        <div class="monster-emoji" id="mob" style="font-size:52px">${m.emoji}</div>
+        <div class="grow">
+          <div class="row"><b>${m.name}</b><span class="sub">Lv.${m.lv}</span><div class="grow"></div><span class="sub" id="ehptxt">${btl.ehp}/${m.hp}</span></div>
+          <div class="hpbar"><div id="ehp" class="${hpClass(btl.ehp,m.hp)}" style="width:${Math.round(btl.ehp/m.hp*100)}%"></div></div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px" id="player">
+        <span style="font-size:24px">🧑‍🎓</span>
+        <div class="grow">
+          <div class="row"><b style="font-size:13px">あなた</b><div class="grow"></div><span class="sub" id="phptxt">${btl.php}/${PLAYER_HP}</span></div>
+          <div class="hpbar"><div id="php" class="${hpClass(btl.php,PLAYER_HP)}" style="width:${Math.round(btl.php/PLAYER_HP*100)}%"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:4px">
+      <div class="row">
+        <span class="pill" style="border-color:${sub.color};color:${sub.color}">${sub.emoji} ${sub.name}｜${esc(q.u)}</span>
+        <div class="grow"></div>${weakChip}
+      </div>
+      <div class="qtext">${esc(q.q)}</div>
+      <div id="choices">
+        ${btl.currentOrder.map((ci,pos)=>`<button class="choice" id="ch${pos}" onclick="answerBattle(${pos})">${"❶❷❸❹"[pos]} ${esc(q.c[ci])}</button>`).join("")}
+      </div>
+      <div id="fb"></div>
+    </div>
+    <div class="sub center">正解でこうげき！キーボードの 1〜4 でも答えられます</div>`;
+}
+
+window.quitBattle = ()=>{
+  if(confirm("バトルからにげますか？（解答の記録は保存済み。戦績には数えません）")){ btl=null; go("battle"); }
+};
+
+window.answerBattle = (pos)=>{
+  if(!btl || btl.answeredThisQ) return;
+  btl.answeredThisQ = true;
+  const id = btl.queue.shift();
+  const q = BANK[id];
+  const m = btl.m;
+  const chosen = btl.currentOrder[pos];
+  const correct = (chosen === 0);
+  const correctPos = btl.currentOrder.indexOf(0);
+  const wasReview = !!S.items[id];
+
+  for(let p=0;p<4;p++){
+    const el = document.getElementById("ch"+p);
+    el.disabled = true;
+    if(p===correctPos) el.classList.add("correct");
+    else if(p===pos) el.classList.add("wrong");
+    else el.classList.add("dim");
+  }
+
+  S.answered++;
+  let fbHtml;
+  if(correct){
+    S.correct++;
+    if(wasReview) S.reviewDone++;
+    scheduleAnswer(id, true, false);
+    btl.combo = Math.min(btl.combo+1, 999); // コンボは最大999回まで
+    if(btl.combo > S.battle.maxCombo) S.battle.maxCombo = btl.combo;
+    const msgs = [];
+    let dmg = 10 + Math.min(btl.combo-1, 3)*2;         // コンボで最大+6
+    if(btl.combo>=2) msgs.push(`⚡${btl.combo}コンボ！`);
+    if(m.weak===q.s){ dmg*=2; msgs.push("こうかは ばつぐんだ！"); }
+    if(Math.random()<0.15){ dmg=Math.round(dmg*1.5); msgs.push("きゅうしょに あたった！"); }
+    btl.ehp = Math.max(0, btl.ehp - dmg);
+    S.xp += 10; btl.gainedXp += 10;
+    soundAtk();
+    const mob = document.getElementById("mob");
+    mob.classList.add("hit");
+    if(btl.ehp<=0) mob.classList.add("fainted");
+    const bar = document.getElementById("ehp");
+    bar.style.width = Math.round(btl.ehp/m.hp*100)+"%";
+    bar.className = hpClass(btl.ehp,m.hp);
+    document.getElementById("ehptxt").textContent = btl.ehp+"/"+m.hp;
+    fbHtml = `<div class="feedback ok"><b>⭕ 正解！ ${m.name}に ${dmg}ダメージ！</b> ${msgs.join(" ")}<br>${esc(q.e)}</div>`;
+  }else{
+    scheduleAnswer(id, false, false);
+    btl.combo = 0;
+    const edmg = m.atk + Math.floor(Math.random()*3);
+    btl.php = Math.max(0, btl.php - edmg);
+    soundNG();
+    const pl = document.getElementById("player");
+    pl.classList.add("hit");
+    const bar = document.getElementById("php");
+    bar.style.width = Math.round(btl.php/PLAYER_HP*100)+"%";
+    bar.className = hpClass(btl.php,PLAYER_HP);
+    document.getElementById("phptxt").textContent = btl.php+"/"+PLAYER_HP;
+    fbHtml = `<div class="feedback ng"><b>❌ 正解は「${esc(q.c[0])}」。${m.name}の反撃！ ${edmg}ダメージ！</b><br>${esc(q.e)}<br>
+      <span class="sub">${esc(m.line)}</span></div>`;
+  }
+  save();
+
+  if(btl.ehp<=0){
+    btl.next = winBattle;
+    fbHtml += `<button class="btn-main" onclick="btlNext()">🏆 しょうり！</button>`;
+  }else if(btl.php<=0){
+    btl.next = loseBattle;
+    fbHtml += `<button class="btn-main" onclick="btlNext()">😵 たおれてしまった…</button>`;
+  }else{
+    btl.next = nextBattleQuestion;
+    fbHtml += `<button class="btn-main" onclick="btlNext()">次へ ▶</button>`;
+  }
+  document.getElementById("fb").innerHTML = fbHtml;
+  ensureNextVisible();
+};
+window.btlNext = ()=>{ if(btl && btl.next){ const f=btl.next; btl.next=null; f(); } };
+
+function winBattle(){
+  const m = btl.m, mi = btl.mi;
+  const firstClear = (mi === S.battle.stage);
+  const bonus = 20 + m.lv*3;
+  S.xp += bonus; btl.gainedXp += bonus;
+  S.battle.wins++;
+  if(firstClear) S.battle.stage++;
+  updateStreak();
+  const newBadges = checkNewBadges();
+  save();
+  soundWin();
+  const nextM = MONSTERS[S.battle.stage];
+  const doneBtl = btl; btl = null;
+  app.innerHTML = `
+    <div class="card center">
+      <div class="result-emoji">🏆</div>
+      <h1>${m.emoji} ${m.name}を たおした！</h1>
+      <div class="stat3">
+        <div><div class="v" style="color:var(--gold)">+${doneBtl.gainedXp}</div><div class="k">獲得XP（ボーナス+${bonus}）</div></div>
+        <div><div class="v">❤️${doneBtl.php}</div><div class="k">のこりHP</div></div>
+        <div><div class="v">🔥${S.streak}</div><div class="k">連続日数</div></div>
+      </div>
+      ${firstClear && nextM ? `<div class="feedback ok" style="margin-bottom:10px"><b>😈 つぎのあいて「${nextM.name}」が あらわれた！</b></div>`:""}
+      ${newBadges.map(b=>`<div class="feedback ok" style="margin-bottom:10px"><b>${b.emoji} バッジ獲得「${b.name}」</b><br><span class="sub">${b.desc}</span></div>`).join("")}
+      <button class="btn-main" onclick="go('battle')">バトルにもどる</button>
+      <button class="btn-sub" onclick="go('home')">ホームへ</button>
+    </div>`;
+  nav("battle");
+}
+
+function loseBattle(){
+  const m = btl.m, mi = btl.mi;
+  S.battle.losses++;
+  updateStreak(); // 負けても学習したことに変わりはない
+  save();
+  soundLose();
+  const doneBtl = btl; btl = null;
+  app.innerHTML = `
+    <div class="card center">
+      <div class="result-emoji">😵</div>
+      <h1>${m.name}に やられてしまった…</h1>
+      <div class="sub" style="margin:8px 0;line-height:1.8">でも解いたぶんのXP（+${doneBtl.gainedXp}）と復習記録はしっかり残っています。<br>まちがえた問題は復習に登場します。おぼえ直してリベンジしよう！</div>
+      <button class="btn-main" onclick="startBattle(${mi})">🔥 リベンジする</button>
+      <button class="btn-sub" onclick="go('battle')">バトルにもどる</button>
+    </div>`;
+  nav("battle");
+}
+
+/* ---- バッジ ---- */
+function renderBadges(){
+  app.innerHTML = `<h1 style="margin-bottom:12px">🏆 バッジコレクション</h1>
+    <div class="card">
+    ${BADGES.map(b=>{
+      const got = S.badges.includes(b.id);
+      return `<div class="badge ${got?"":"locked"}">
+        <span class="bemoji">${b.emoji}</span>
+        <div><b>${b.name}</b><div class="sub">${b.desc}</div></div>
+        <div class="grow"></div>${got?"✅":"🔒"}
+      </div>`;
+    }).join("")}
+    </div>
+    <div class="card sub">ここまでの記録：セッション${S.sessions}回／のべ${S.answered}問に挑戦／${S.correct}問正解</div>`;
+}
+
+/* ---- 学習のしくみ ---- */
+function renderScience(){
+  app.innerHTML = `<h1 style="margin-bottom:12px">🧠 このアプリの学習のしくみ</h1>
+  <div class="card science">
+    <p>まなびクエストは「なんとなく楽しい」だけでなく、<b>記憶と学習の研究で効果が確かめられた方法</b>だけを組み合わせて作られています。</p>
+
+    <h3>1. 間隔反復（分散学習）— 忘れる直前に思い出す</h3>
+    <p>人は覚えたことを1日で急速に忘れます（エビングハウスの忘却曲線）。しかし<b>忘れかけたタイミングで復習</b>すると、記憶はどんどん長持ちするようになります。このアプリは正解するたびに次の復習を「1日後→3日後→7日後→14日後→30日後」と自動で間隔を広げます。</p>
+    <cite>Ebbinghaus (1885)／Cepeda et al. (2006) の254研究のメタ分析：分散学習は一夜漬けより長期記憶を大きく改善</cite>
+
+    <h3>2. 検索練習（テスト効果）— 読むより思い出す</h3>
+    <p>教科書を読み直すより、<b>問題に答えて記憶から「取り出す」</b>方が、長期的に約1.5倍以上記憶に残ることが実験で示されています。だからこのアプリはすべてクイズ形式です。</p>
+    <cite>Roediger & Karpicke (2006), Psychological Science：1週間後のテストで再読グループを大きく上回る</cite>
+
+    <h3>3. 即時フィードバック — 直後の解説で修正</h3>
+    <p>答えた<b>直後</b>に正誤と理由がわかると、誤った理解がそのまま定着するのを防げます。全問に「なぜそうなるか」の解説つき。</p>
+    <cite>Hattie & Timperley (2007)：フィードバックは学力への効果が最も大きい介入のひとつ</cite>
+
+    <h3>4. インターリービング — 教科を混ぜて出題</h3>
+    <p>同じ単元を続けて解くより、<b>違う種類の問題を混ぜる</b>方が「どの解き方を使うか」を毎回考えるため、テスト本番に強い力がつきます。今日のクエストは4教科ミックスです。</p>
+    <cite>Rohrer & Taylor (2007)：混合練習グループは1週間後のテストで成績が大きく向上</cite>
+
+    <h3>5. まちがい直し — 正解するまで終わらない</h3>
+    <p>まちがえた問題はクエストの最後にもう一度出ます。<b>自力で思い出して正解し直す</b>ことが、次に同じミスをしない一番の近道です。</p>
+
+    <h3>6. ゲーミフィケーション — 続けられる仕組み</h3>
+    <p>XP・レベル・連続日数・バッジは「今日もやろう」という気持ちを支えるためのものです。学習は<b>短時間でも毎日続ける</b>ことが最も効果的だからこそ、続けたくなる仕掛けを入れています。「まなびバトル」も同じで、モンスターとの対戦という形をとっていますが、中身はすべて検索練習（クイズ）です。バトル中の解答も復習スケジュールにきちんと記録されます。弱点教科ボーナスは、4教科をまんべんなく学ぶきっかけになるよう設計しています。</p>
+    <cite>Hamari et al. (2014) のレビュー／自己決定理論 (Deci & Ryan)：達成の可視化は内発的動機づけを支える</cite>
+
+    <h3>7. カリキュラム連動 — 習ったところから出題</h3>
+    <p>学校の授業進度（3学期制・標準的な教科書の年間計画）に合わせて、<b>いま習っている範囲までの単元</b>だけが今日のクエストに登場します（現在：${termName()}・〜${monthLabel(schoolMonth())}）。授業で習う→その日のうちにクイズで思い出す、が最強の組み合わせです。未習単元は「特訓」タブから先取りもできます。</p>
+
+    <h3>8. 小学生の学習容量に合わせた調整</h3>
+    <p>中学生向けの「まなびクエスト」と同じしくみですが、1回のクエストの問題数を少なめ（${QUEST_SIZE}問）にし、言葉づかいもやさしくしています。集中して取り組める分量で、毎日少しずつ続けることを大切にしています。</p>
+
+    <h3>📚 収録範囲（小学3年）</h3>
+    <p>算数（たし算・ひき算の筆算・かけ算の筆算・わり算・大きな数・長さ重さかさ・円と球・三角形と分数）／国語（漢字・こそあど言葉・主語述語・ことわざ慣用句・辞典・ローマ字）／理科（植物・こん虫・風とゴム・光・じしゃく・電気・重さ）／社会（地図記号・店の仕事・工場の仕事・安全を守る仕事・市のうつりかわり）— 全${BANK.length}問</p>
+
+    <h3>🔒 プライバシーについて（保護者の方へ）</h3>
+    <p>このアプリは<b>名前・メールアドレスなどの個人情報を一切集めません</b>。アカウント登録も不要です。学習の記録（XPや正誤）は<b>お使いの端末のブラウザの中だけ</b>に保存され、外部のサーバーには送信されません。広告・アクセス解析・Cookieも使っていません。記録を消したいときは下のボタンでいつでも削除できます。</p>
+
+    <h3>⚠️ ご利用にあたって</h3>
+    <p>本アプリは小学3年の学習範囲をもとに作成した<b>学習支援ツール</b>です。内容は正確を期していますが、誤りが含まれる可能性があります。テスト対策では、必ず学校の授業と教科書の内容を優先してください。単元の学習時期はあくまで一般的な目安で、学校や教科書によって前後します。保護者の方といっしょに取り組むと、より安心してご利用いただけます。</p>
+
+    <button class="btn-sub" onclick="resetAll()" style="color:var(--ng)">学習データをリセットする</button>
+    <p class="sub center" style="margin-top:14px">まなびクエスト 小3 ・ 個人学習用の無料アプリ</p>
+    <p class="sub center" style="margin-top:6px">中学1年生向けアプリは <a href="index.html">こちら</a></p>
+  </div>`;
+}
+window.resetAll = ()=>{
+  if(confirm("本当にすべての学習記録を消しますか？この操作は取り消せません。")){
+    localStorage.removeItem(KEY); S = load(); go("home");
+  }
+};
+
+/* 起動 */
+go("home");
+</script>
+</body>
+</html>
