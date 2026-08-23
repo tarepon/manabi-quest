@@ -639,11 +639,16 @@ function newUnlockedIds(){
 }
 function scheduleAnswer(id, firstTryCorrect, retried){
   let st = S.items[id];
+  const isNew = !st;
   if(!st){ st = S.items[id] = {stage:0, due:0, seen:0, right:0, wrong:0}; }
+  // 「特訓」「バトル」はまだ復習日が来ていない問題も出題できるため、その前倒し分は
+  // 間隔（ステージ）を進めない＝マスター判定を早送りしない。新規問題や、実際に復習日が来ていた
+  // 場合（wasDue）だけが本来のステージ進行の対象になる。
+  const wasDue = isNew || st.due <= Date.now();
   st.seen++;
   if(firstTryCorrect){
     st.right++;
-    st.stage = Math.min(st.stage+1, INTERVALS.length-1);
+    if(wasDue) st.stage = Math.min(st.stage+1, INTERVALS.length-1);
   }else if(retried){ // セッション内で間違えたあと正解
     st.right++;
     st.stage = 1;
@@ -651,7 +656,7 @@ function scheduleAnswer(id, firstTryCorrect, retried){
     st.wrong++;
     st.stage = 0;
   }
-  st.due = Date.now() + INTERVALS[st.stage]*DAY;
+  if(wasDue || !firstTryCorrect) st.due = Date.now() + INTERVALS[st.stage]*DAY;
   save();
 }
 
