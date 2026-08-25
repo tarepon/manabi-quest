@@ -708,9 +708,16 @@ function makeMonsterInstance(o){
     xp: 0,
     iv: {hp: Math.floor(Math.random()*16), atk: Math.floor(Math.random()*16)},
     boost: {hp:0, atk:0, def:0},
+    awakening: 0,
   };
 }
-function monsterLevel(inst){ return 1 + Math.floor(inst.xp/15); }
+/* レベルの上限（げんかい）。ふつうはLEVEL_CAP_BASEで頭打ちになるが、超レアの「モンスターのたましい」で
+   限界突破（覚醒）すると上限が広がり、たまっていた経験値ぶんいっきにレベルが上がる。個体値(iv)も
+   覚醒のたびに通常の0〜15の枠を超えて伸びる。 */
+const LEVEL_CAP_BASE = 20, LEVEL_CAP_STEP = 15, AWAKEN_IV_BONUS = 3;
+function levelCap(inst){ return LEVEL_CAP_BASE + (inst.awakening||0)*LEVEL_CAP_STEP; }
+function monsterLevel(inst){ return Math.min(1 + Math.floor(inst.xp/15), levelCap(inst)); }
+function isAtLevelCap(inst){ return monsterLevel(inst) >= levelCap(inst); }
 function monsterMaxHp(inst){ return 22 + monsterLevel(inst)*4 + inst.iv.hp + (inst.boost?inst.boost.hp:0); }
 function monsterAtk(inst){ return 5 + Math.floor(monsterLevel(inst)*0.8) + Math.floor(inst.iv.atk/3) + (inst.boost?inst.boost.atk:0); }
 function monsterDef(inst){ return inst.boost ? inst.boost.def : 0; }
@@ -718,7 +725,10 @@ if(!S.team || !S.team.members || !S.team.members.length){
   S.team = {members:[makeMonsterInstance(STARTER_TEMPLATE)], activeIndex:0};
 }
 if(typeof S.team.activeIndex !== "number" || S.team.activeIndex<0 || S.team.activeIndex>=S.team.members.length) S.team.activeIndex = 0;
-S.team.members.forEach(t=>{ if(!t.boost) t.boost = {hp:0, atk:0, def:0}; });
+S.team.members.forEach(t=>{
+  if(!t.boost) t.boost = {hp:0, atk:0, def:0};
+  if(typeof t.awakening !== "number") t.awakening = 0;
+});
 if(!S.itemBox) S.itemBox = {};
 function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
 function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
@@ -825,9 +835,10 @@ const ITEMS = [
   {id:"horn",   emoji:"🦌", name:"ふしぎな角",           rarity:"rare",   effect:{def:2}},
   {id:"core",   emoji:"🔮", name:"エネルギーコア",       rarity:"super",  effect:{hp:3, atk:3}},
   {id:"crystal",emoji:"💠", name:"かがやく結晶",         rarity:"super",  effect:{def:4}},
-  {id:"soul",   emoji:"👻", name:"モンスターのたましい", rarity:"ultra",  effect:{hp:5, atk:5, def:5}},
+  {id:"soul",   emoji:"👻", name:"モンスターのたましい", rarity:"ultra",  effect:{}, awaken:true},
 ];
 const BOOST_CAP = {hp:60, atk:30, def:20};
+const AWAKEN_ITEM_ID = "soul";
 function pickItemDrop(){
   const r = Math.random()*100;
   let tier;
@@ -854,6 +865,18 @@ function useItemOnMonster(itemId, inst){
   if(!applied) return false;
   S.itemBox[itemId]--;
   if(S.itemBox[itemId]<=0) delete S.itemBox[itemId];
+  save();
+  return true;
+}
+/* 超レアの「モンスターのたましい」を1個消費して限界突破（覚醒）。レベル上限が広がり、
+   たまっていた経験値ぶんいっきにレベルアップ。個体値も通常の0〜15の枠を超えて伸びる。 */
+function awakenMonster(inst){
+  if(itemBoxCount(AWAKEN_ITEM_ID) <= 0) return false;
+  inst.awakening = (inst.awakening||0) + 1;
+  inst.iv.hp += AWAKEN_IV_BONUS;
+  inst.iv.atk += AWAKEN_IV_BONUS;
+  S.itemBox[AWAKEN_ITEM_ID]--;
+  if(S.itemBox[AWAKEN_ITEM_ID]<=0) delete S.itemBox[AWAKEN_ITEM_ID];
   save();
   return true;
 }
@@ -896,6 +919,8 @@ const BADGES = [
   {id:"arcadeAll", emoji:"🎁", name:"景品コンプリート", desc:"まなびゲーセンの景品をすべて集める",         check:()=>Object.keys(S.arcade.owned).length>=PRIZES.length},
   {id:"forge1",    emoji:"🔧", name:"はじめての合成", desc:"アイテムを使ってモンスターをはじめて強化する", check:()=>S.team.members.some(t=>t.boost && (t.boost.hp+t.boost.atk+t.boost.def)>0)},
   {id:"forgeMax",  emoji:"🛡️", name:"剛性の壁",       desc:"モンスターの剛性を上限まで高める",             check:()=>S.team.members.some(t=>t.boost && t.boost.def>=BOOST_CAP.def)},
+  {id:"awaken1",   emoji:"🌟", name:"限界突破",       desc:"モンスターのたましいでモンスターをはじめて覚醒させる", check:()=>S.team.members.some(t=>(t.awakening||0)>=1)},
+  {id:"awaken3",   emoji:"✨", name:"覚醒の極意",     desc:"1体のモンスターを3回覚醒させる",               check:()=>S.team.members.some(t=>(t.awakening||0)>=3)},
 ];
 function checkNewBadges(){
   const got = BADGES.filter(b=>!S.badges.includes(b.id) && b.check());
@@ -1838,9 +1863,9 @@ function renderTeam(){
       <div class="row">
         <span style="font-size:36px">${t.emoji}</span>
         <div class="grow">
-          <div class="row"><b>${esc(t.name)}</b><span class="pill">Lv.${monsterLevel(t)}</span>${isLead?'<span class="pill" style="border-color:var(--gold);color:var(--gold)">先頭</span>':""}</div>
+          <div class="row"><b>${esc(t.name)}</b><span class="pill">Lv.${monsterLevel(t)}</span>${isAtLevelCap(t)?'<span class="pill" style="border-color:var(--ng);color:var(--ng)">🔒上限</span>':""}${(t.awakening||0)>0?`<span class="pill" style="border-color:var(--gold);color:var(--gold)">🌟覚醒×${t.awakening}</span>`:""}${isLead?'<span class="pill" style="border-color:var(--gold);color:var(--gold)">先頭</span>':""}</div>
           <div class="sub" style="margin-top:4px">HP ${maxHp}｜こうげき ${atk}｜剛性(防御) ${def}｜タイプ：${t.type?SUBJECTS[t.type].emoji+SUBJECTS[t.type].name:"なし"}</div>
-          <div class="sub">個体値：HP+${t.iv.hp} こうげき+${t.iv.atk}（0〜15）</div>
+          <div class="sub">個体値：HP+${t.iv.hp} こうげき+${t.iv.atk}（通常0〜15、覚醒でさらに上昇）</div>
           ${boosted?`<div class="sub">合成による強化：HP+${t.boost.hp} こうげき+${t.boost.atk} 剛性+${t.boost.def}</div>`:""}
           <div class="sub">わざ：${moves.map(mv=>`${mv.emoji}${mv.name}`).join(" ／ ")}</div>
         </div>
@@ -1879,7 +1904,7 @@ function renderReinforce(monsterId, justEarnedBadges){
   const t = S.team.members.find(m=>m.id===monsterId);
   if(!t){ renderTeam(); return; }
   justEarnedBadges = justEarnedBadges || [];
-  const owned = ITEMS.filter(it=>itemBoxCount(it.id)>0);
+  const owned = ITEMS.filter(it=>itemBoxCount(it.id)>0 && !it.awaken);
   const rows = owned.length ? owned.map(it=>{
     const info = RARITY_INFO[it.rarity];
     const effTxt = Object.entries(it.effect).map(([k,v])=>({hp:"HP",atk:"こうげき",def:"剛性"}[k]+"+"+v)).join(" ");
@@ -1890,18 +1915,26 @@ function renderReinforce(monsterId, justEarnedBadges){
       <span class="rarity-pill" style="background:${info.color}22;color:${info.color};border:1px solid ${info.color}">${info.name}</span>
     </button>`;
   }).join("") : `<div class="sub center" style="padding:16px 0">アイテムボックスが空っぽ。バトルに勝って素材をひろおう！</div>`;
+  const soulItem = ITEMS.find(it=>it.id===AWAKEN_ITEM_ID);
+  const soulCount = itemBoxCount(AWAKEN_ITEM_ID);
   app.innerHTML = `<h1 style="margin-bottom:12px">🔧 ${esc(t.name)}を強化する</h1>
     <div class="card">
       <div class="row">
         <span style="font-size:36px">${t.emoji}</span>
         <div class="grow">
-          <b>${esc(t.name)}</b> <span class="pill">Lv.${monsterLevel(t)}</span>
+          <b>${esc(t.name)}</b> <span class="pill">Lv.${monsterLevel(t)} / 上限${levelCap(t)}</span>
           <div class="sub" style="margin-top:4px">HP ${monsterMaxHp(t)}｜こうげき ${monsterAtk(t)}｜剛性(防御) ${monsterDef(t)}</div>
           <div class="sub">合成による強化：HP+${t.boost.hp}/${BOOST_CAP.hp} こうげき+${t.boost.atk}/${BOOST_CAP.atk} 剛性+${t.boost.def}/${BOOST_CAP.def}</div>
+          ${isAtLevelCap(t)?'<div class="sub" style="color:var(--ng);margin-top:2px">🔒 経験値はたまっているがレベル上限。覚醒すると一気に上限が開放される！</div>':""}
         </div>
       </div>
     </div>
     ${justEarnedBadges.map(b=>`<div class="feedback ok" style="margin-bottom:10px"><b>${b.emoji} バッジ獲得「${b.name}」</b><br><span class="sub">${b.desc}</span></div>`).join("")}
+    <div class="card" style="border-color:var(--gold)">
+      <h2>🌟 限界突破（覚醒）</h2>
+      <div class="sub" style="margin-bottom:10px">超レアの${soulItem.emoji}「${soulItem.name}」を1個ささげると、レベル上限が+${LEVEL_CAP_STEP}広がり、たまっていた経験値ぶんいっきにレベルアップ。個体値（HP・こうげき）も通常の枠を超えて+${AWAKEN_IV_BONUS}ずつ永久に伸びる。覚醒回数：${t.awakening||0}回</div>
+      <button class="btn-main" ${soulCount<=0?"disabled":""} onclick="applyAwaken(${monsterId})">🌟 覚醒させる（${soulItem.emoji}のこり${soulCount}個）</button>
+    </div>
     <div class="card">
       <h2>🎁 素材を使って合成</h2>
       ${rows}
@@ -1917,6 +1950,17 @@ window.applyReinforce = (monsterId, itemId)=>{
     newBadges = checkNewBadges();
     save();
     if(newBadges.length) soundLv();
+  }
+  renderReinforce(monsterId, newBadges);
+};
+window.applyAwaken = (monsterId)=>{
+  const t = S.team.members.find(m=>m.id===monsterId);
+  if(!t) return;
+  let newBadges = [];
+  if(awakenMonster(t)){
+    soundLv();
+    newBadges = checkNewBadges();
+    save();
   }
   renderReinforce(monsterId, newBadges);
 };
