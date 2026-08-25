@@ -682,7 +682,7 @@ function load(){
           streak:0, lastDay:null, badges:[], perfectRuns:0, items:{}, sound:true,
           battle:{stage:0, wins:0, losses:0, maxCombo:0, secretNoHitWins:0},
           training:{sessions:0, addCorrect:0, subCorrect:0, mulCorrect:0, kanjiCorrect:0, bestCombo:0, perfectSessions:0},
-          tickets:0, arcade:{owned:{}, pulls:0}};
+          tickets:0, arcade:{owned:{}, pulls:0}, itemBox:{}};
 }
 /* 旧バージョンの保存データには一部フィールドがないため補完（親オブジェクトが既にある場合も、
    新しく追加したサブフィールドだけ欠けていることがあるので個別にチェックする） */
@@ -707,15 +707,19 @@ function makeMonsterInstance(o){
     emoji: o.emoji, name: o.name, type: o.type, speciesBase: o.speciesBase || o.name,
     xp: 0,
     iv: {hp: Math.floor(Math.random()*16), atk: Math.floor(Math.random()*16)},
+    boost: {hp:0, atk:0, def:0},
   };
 }
 function monsterLevel(inst){ return 1 + Math.floor(inst.xp/15); }
-function monsterMaxHp(inst){ return 22 + monsterLevel(inst)*4 + inst.iv.hp; }
-function monsterAtk(inst){ return 5 + Math.floor(monsterLevel(inst)*0.8) + Math.floor(inst.iv.atk/3); }
+function monsterMaxHp(inst){ return 22 + monsterLevel(inst)*4 + inst.iv.hp + (inst.boost?inst.boost.hp:0); }
+function monsterAtk(inst){ return 5 + Math.floor(monsterLevel(inst)*0.8) + Math.floor(inst.iv.atk/3) + (inst.boost?inst.boost.atk:0); }
+function monsterDef(inst){ return inst.boost ? inst.boost.def : 0; }
 if(!S.team || !S.team.members || !S.team.members.length){
   S.team = {members:[makeMonsterInstance(STARTER_TEMPLATE)], activeIndex:0};
 }
 if(typeof S.team.activeIndex !== "number" || S.team.activeIndex<0 || S.team.activeIndex>=S.team.members.length) S.team.activeIndex = 0;
+S.team.members.forEach(t=>{ if(!t.boost) t.boost = {hp:0, atk:0, def:0}; });
+if(!S.itemBox) S.itemBox = {};
 function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
 function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 
@@ -810,6 +814,50 @@ function grantPrize(p){
   return {prize:p, isNew, dupBonus};
 }
 
+/* ============ モンスターのドロップアイテム（強化素材） ============
+   バトルに勝つとランダムでモンスター素材をひろう。ボックス（アイテムボックス）にためて眺めたり、
+   手持ちモンスターに使って合成し、ステータスをきょうかしたりできる。 */
+const ITEMS = [
+  {id:"scale",  emoji:"🐚", name:"モンスターのウロコ",   rarity:"common", effect:{hp:2}},
+  {id:"bone",   emoji:"🦴", name:"かたいほね",           rarity:"common", effect:{hp:1, def:1}},
+  {id:"feather",emoji:"🪶", name:"かるいはね",           rarity:"common", effect:{atk:1}},
+  {id:"fang",   emoji:"🦷", name:"するどいキバ",         rarity:"rare",   effect:{atk:2}},
+  {id:"horn",   emoji:"🦌", name:"ふしぎな角",           rarity:"rare",   effect:{def:2}},
+  {id:"core",   emoji:"🔮", name:"エネルギーコア",       rarity:"super",  effect:{hp:3, atk:3}},
+  {id:"crystal",emoji:"💠", name:"かがやく結晶",         rarity:"super",  effect:{def:4}},
+  {id:"soul",   emoji:"👻", name:"モンスターのたましい", rarity:"ultra",  effect:{hp:5, atk:5, def:5}},
+];
+const BOOST_CAP = {hp:60, atk:30, def:20};
+function pickItemDrop(){
+  const r = Math.random()*100;
+  let tier;
+  if(r < 3) tier = "ultra";
+  else if(r < 3+9) tier = "super";
+  else if(r < 3+9+33) tier = "rare";
+  else tier = "common";
+  const pool = ITEMS.filter(it=>it.rarity===tier);
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+function itemBoxCount(id){ return S.itemBox[id]||0; }
+/* アイテムを1個消費してモンスターをきょうか。上限に達したステータスは伸びない（他のステータスは伸びる）。 */
+function useItemOnMonster(itemId, inst){
+  const item = ITEMS.find(it=>it.id===itemId);
+  if(!item || itemBoxCount(itemId)<=0) return false;
+  let applied = false;
+  Object.entries(item.effect).forEach(([stat,amt])=>{
+    const cap = BOOST_CAP[stat];
+    if(inst.boost[stat] < cap){
+      inst.boost[stat] = Math.min(cap, inst.boost[stat]+amt);
+      applied = true;
+    }
+  });
+  if(!applied) return false;
+  S.itemBox[itemId]--;
+  if(S.itemBox[itemId]<=0) delete S.itemBox[itemId];
+  save();
+  return true;
+}
+
 /* バッジ */
 const BADGES = [
   {id:"first",   emoji:"🎯", name:"はじめの一歩",   desc:"はじめてのクエストをクリア",           check:()=>S.sessions>=1},
@@ -846,6 +894,8 @@ const BADGES = [
   {id:"fullparty", emoji:"🎒", name:"フルパーティ", desc:"手持ちモンスターを3体そろえる",                 check:()=>S.team.members.length>=3},
   {id:"arcade1",   emoji:"🎟️", name:"はじめてのガチャ", desc:"まなびゲーセンでガチャをはじめて回す",       check:()=>S.arcade.pulls>=1},
   {id:"arcadeAll", emoji:"🎁", name:"景品コンプリート", desc:"まなびゲーセンの景品をすべて集める",         check:()=>Object.keys(S.arcade.owned).length>=PRIZES.length},
+  {id:"forge1",    emoji:"🔧", name:"はじめての合成", desc:"アイテムを使ってモンスターをはじめて強化する", check:()=>S.team.members.some(t=>t.boost && (t.boost.hp+t.boost.atk+t.boost.def)>0)},
+  {id:"forgeMax",  emoji:"🛡️", name:"剛性の壁",       desc:"モンスターの剛性を上限まで高める",             check:()=>S.team.members.some(t=>t.boost && t.boost.def>=BOOST_CAP.def)},
 ];
 function checkNewBadges(){
   const got = BADGES.filter(b=>!S.badges.includes(b.id) && b.check());
@@ -1617,7 +1667,8 @@ window.answerBattle = (pos)=>{
   scheduleAnswer(id, false, false);
   btl.combo = 0;
   btl.tookDamage = true;
-  const edmg = m.atk + Math.floor(Math.random()*3);
+  const rawDmg = m.atk + Math.floor(Math.random()*3);
+  const edmg = Math.max(1, rawDmg - monsterDef(inst));
   btl.teamHp[inst.id] = Math.max(0, btl.teamHp[inst.id] - edmg);
   soundNG();
   const pl = document.getElementById("player");
@@ -1720,11 +1771,15 @@ function winBattle(){
   if(firstClear) S.battle.stage++;
   const inst = activeMember();
   inst.xp += 15; // しょうりボーナス経験値
+  let drop = pickItemDrop();
+  if(m.secret){ let tries=0; while(drop.rarity==="common" && tries<5){ drop = pickItemDrop(); tries++; } } // ゲキムズ隠しボスはレア以上を確定させやすくする
+  S.itemBox[drop.id] = (S.itemBox[drop.id]||0) + 1;
   updateStreak();
   const newBadges = checkNewBadges();
   save();
   soundWin();
   const nextM = MONSTERS[S.battle.stage];
+  const dropInfo = RARITY_INFO[drop.rarity];
   const doneBtl = btl; btl = null;
   app.innerHTML = `
     <div class="card center">
@@ -1736,9 +1791,15 @@ function winBattle(){
         <div><div class="v">🔥${S.streak}</div><div class="k">連続日数</div></div>
       </div>
       <div class="sub center" style="margin-bottom:6px">🎫 ${doneBtl.gainedTickets}チケット獲得（しょうりボーナス+5込み）</div>
+      <div class="feedback ok" style="margin-bottom:10px">
+        <b>${drop.emoji} 「${esc(drop.name)}」を手に入れた！</b>
+        <span class="rarity-pill" style="background:${dropInfo.color}22;color:${dropInfo.color};border:1px solid ${dropInfo.color};margin-left:6px">${dropInfo.name}</span>
+        <br><span class="sub">アイテムボックスに保存された。手持ちにあずけて合成すると強化できるよ</span>
+      </div>
       ${firstClear && nextM ? `<div class="feedback ok" style="margin-bottom:10px"><b>😈 つぎのあいて「${nextM.name}」が あらわれた！</b></div>`:""}
       ${newBadges.map(b=>`<div class="feedback ok" style="margin-bottom:10px"><b>${b.emoji} バッジ獲得「${b.name}」</b><br><span class="sub">${b.desc}</span></div>`).join("")}
       ${m.capturable?`<button class="btn-main" onclick="captureMonster(${mi})">🎣 なかまにする</button>`:""}
+      <button class="btn-sub" onclick="viewTeam()">🎒 手持ち・アイテムボックスを見る</button>
       <button class="btn-sub" onclick="go('battle')">バトルにもどる</button>
       <button class="btn-sub" onclick="go('home')">ホームへ</button>
     </div>`;
@@ -1769,30 +1830,96 @@ function renderTeam(){
   const rows = S.team.members.map((t,idx)=>{
     const maxHp = monsterMaxHp(t);
     const atk = monsterAtk(t);
+    const def = monsterDef(t);
     const moves = movesForType(t.type);
     const isLead = idx===S.team.activeIndex;
+    const boosted = t.boost && (t.boost.hp||t.boost.atk||t.boost.def);
     return `<div class="card">
       <div class="row">
         <span style="font-size:36px">${t.emoji}</span>
         <div class="grow">
           <div class="row"><b>${esc(t.name)}</b><span class="pill">Lv.${monsterLevel(t)}</span>${isLead?'<span class="pill" style="border-color:var(--gold);color:var(--gold)">先頭</span>':""}</div>
-          <div class="sub" style="margin-top:4px">HP ${maxHp}｜こうげき ${atk}｜タイプ：${t.type?SUBJECTS[t.type].emoji+SUBJECTS[t.type].name:"なし"}</div>
+          <div class="sub" style="margin-top:4px">HP ${maxHp}｜こうげき ${atk}｜剛性(防御) ${def}｜タイプ：${t.type?SUBJECTS[t.type].emoji+SUBJECTS[t.type].name:"なし"}</div>
           <div class="sub">個体値：HP+${t.iv.hp} こうげき+${t.iv.atk}（0〜15）</div>
+          ${boosted?`<div class="sub">合成による強化：HP+${t.boost.hp} こうげき+${t.boost.atk} 剛性+${t.boost.def}</div>`:""}
           <div class="sub">わざ：${moves.map(mv=>`${mv.emoji}${mv.name}`).join(" ／ ")}</div>
         </div>
       </div>
       <div class="row" style="margin-top:10px;gap:8px">
+        <button class="btn-sub" style="margin-top:0" onclick="renderReinforce(${t.id})">🔧 強化する</button>
         ${isLead?"":`<button class="btn-sub" style="margin-top:0" onclick="setLead(${idx})">先頭にする</button>`}
         ${S.team.members.length>1?`<button class="btn-sub" style="margin-top:0;color:var(--ng)" onclick="releaseMember(${idx})">にがす</button>`:""}
       </div>
     </div>`;
   }).join("");
+  const boxIds = Object.keys(S.itemBox).filter(id=>S.itemBox[id]>0);
+  const boxGrid = ITEMS.map(it=>{
+    const cnt = itemBoxCount(it.id);
+    const owned = cnt>0;
+    const info = RARITY_INFO[it.rarity];
+    return `<div class="prize-item ${owned?"":"locked"}">
+      <span class="rarity-pill" style="background:${info.color}22;color:${info.color};border:1px solid ${info.color}">${info.name}</span>
+      <span class="pemoji">${owned?it.emoji:"❓"}</span>
+      <div class="pname">${owned?esc(it.name):"？？？"}</div>
+      ${cnt>0?`<div class="pcount">×${cnt}</div>`:""}
+    </div>`;
+  }).join("");
   app.innerHTML = `<h1 style="margin-bottom:12px">🎒 手持ちモンスター（${S.team.members.length}/3）</h1>
     <div class="sub" style="margin-bottom:12px">バトルで通常モンスターを倒すとここに新しい仲間が増える。先頭のモンスターがバトルの出撃モンスターになる。</div>
     ${rows}
+    <div class="card">
+      <h2>🎁 アイテムボックス（${boxIds.length}/${ITEMS.length}種）</h2>
+      <div class="sub" style="margin-bottom:6px">バトルの勝利でひろった素材。モンスターの「強化する」から使って合成できる。</div>
+      <div class="prize-grid">${boxGrid}</div>
+    </div>
     <button class="btn-sub" onclick="go('battle')">⬅ バトルにもどる</button>`;
 }
 window.viewTeam = renderTeam;
+function renderReinforce(monsterId, justEarnedBadges){
+  const t = S.team.members.find(m=>m.id===monsterId);
+  if(!t){ renderTeam(); return; }
+  justEarnedBadges = justEarnedBadges || [];
+  const owned = ITEMS.filter(it=>itemBoxCount(it.id)>0);
+  const rows = owned.length ? owned.map(it=>{
+    const info = RARITY_INFO[it.rarity];
+    const effTxt = Object.entries(it.effect).map(([k,v])=>({hp:"HP",atk:"こうげき",def:"剛性"}[k]+"+"+v)).join(" ");
+    const capped = Object.keys(it.effect).every(k=>t.boost[k]>=BOOST_CAP[k]);
+    return `<button class="dojo-card" ${capped?"disabled":""} onclick="applyReinforce(${monsterId},'${it.id}')">
+      <span class="dico">${it.emoji}</span>
+      <div class="grow"><b>${esc(it.name)}</b><div class="sub">${effTxt}${capped?"（上限に到達）":""}｜のこり${itemBoxCount(it.id)}個</div></div>
+      <span class="rarity-pill" style="background:${info.color}22;color:${info.color};border:1px solid ${info.color}">${info.name}</span>
+    </button>`;
+  }).join("") : `<div class="sub center" style="padding:16px 0">アイテムボックスが空っぽ。バトルに勝って素材をひろおう！</div>`;
+  app.innerHTML = `<h1 style="margin-bottom:12px">🔧 ${esc(t.name)}を強化する</h1>
+    <div class="card">
+      <div class="row">
+        <span style="font-size:36px">${t.emoji}</span>
+        <div class="grow">
+          <b>${esc(t.name)}</b> <span class="pill">Lv.${monsterLevel(t)}</span>
+          <div class="sub" style="margin-top:4px">HP ${monsterMaxHp(t)}｜こうげき ${monsterAtk(t)}｜剛性(防御) ${monsterDef(t)}</div>
+          <div class="sub">合成による強化：HP+${t.boost.hp}/${BOOST_CAP.hp} こうげき+${t.boost.atk}/${BOOST_CAP.atk} 剛性+${t.boost.def}/${BOOST_CAP.def}</div>
+        </div>
+      </div>
+    </div>
+    ${justEarnedBadges.map(b=>`<div class="feedback ok" style="margin-bottom:10px"><b>${b.emoji} バッジ獲得「${b.name}」</b><br><span class="sub">${b.desc}</span></div>`).join("")}
+    <div class="card">
+      <h2>🎁 素材を使って合成</h2>
+      ${rows}
+    </div>
+    <button class="btn-sub" onclick="renderTeam()">⬅ 手持ちにもどる</button>`;
+}
+window.renderReinforce = renderReinforce;
+window.applyReinforce = (monsterId, itemId)=>{
+  const t = S.team.members.find(m=>m.id===monsterId);
+  if(!t) return;
+  let newBadges = [];
+  if(useItemOnMonster(itemId, t)){
+    newBadges = checkNewBadges();
+    save();
+    if(newBadges.length) soundLv();
+  }
+  renderReinforce(monsterId, newBadges);
+};
 window.setLead = (idx)=>{ S.team.activeIndex = idx; save(); renderTeam(); };
 window.releaseMember = (idx)=>{
   if(S.team.members.length<=1) return;
