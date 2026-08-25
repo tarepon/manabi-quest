@@ -30,6 +30,7 @@
     font-family:inherit;border:none;border-radius:14px;cursor:pointer;
     font-size:16px;font-weight:700;color:var(--text);
   }
+  button:disabled{opacity:.4;cursor:default}
   .btn-main{
     width:100%;padding:16px;background:linear-gradient(135deg,#5b7cfa,#8a5bfa);
     box-shadow:0 6px 20px rgba(90,110,250,.35);margin-top:6px;
@@ -122,6 +123,15 @@
   .dojo-card{display:flex;align-items:center;gap:12px;width:100%;padding:14px;margin-bottom:8px;background:var(--panel2);border:1px solid var(--line);border-radius:14px;text-align:left}
   .dojo-card .dico{font-size:28px}
   .lockcount{font-size:13px;color:var(--sub);text-align:center;padding:8px 0}
+  /* まなびゲーセン：景品コレクション */
+  .prize-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+  .prize-item{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:20px 4px 8px;text-align:center}
+  .prize-item.locked{opacity:.4;filter:grayscale(1)}
+  .prize-item .rarity-pill{position:absolute;top:4px;left:50%;transform:translateX(-50%);white-space:nowrap}
+  .prize-item .pemoji{font-size:26px;display:block;margin:4px 0 4px}
+  .prize-item .pname{font-size:10px;line-height:1.3;color:var(--sub)}
+  .prize-item .pcount{font-size:10px;font-weight:800;color:var(--gold)}
+  .rarity-pill{font-size:9px;padding:1px 6px;border-radius:99px;font-weight:800;display:inline-block}
 </style>
 </head>
 <body>
@@ -671,7 +681,8 @@ function load(){
   return {xp:0, answered:0, correct:0, reviewDone:0, sessions:0, inputCorrect:0,
           streak:0, lastDay:null, badges:[], perfectRuns:0, items:{}, sound:true,
           battle:{stage:0, wins:0, losses:0, maxCombo:0, secretNoHitWins:0},
-          training:{sessions:0, addCorrect:0, subCorrect:0, mulCorrect:0, kanjiCorrect:0, bestCombo:0, perfectSessions:0}};
+          training:{sessions:0, addCorrect:0, subCorrect:0, mulCorrect:0, kanjiCorrect:0, bestCombo:0, perfectSessions:0},
+          tickets:0, arcade:{owned:{}, pulls:0}, itemBox:{}};
 }
 /* 旧バージョンの保存データには一部フィールドがないため補完（親オブジェクトが既にある場合も、
    新しく追加したサブフィールドだけ欠けていることがあるので個別にチェックする） */
@@ -680,6 +691,10 @@ if(typeof S.battle.secretNoHitWins !== "number") S.battle.secretNoHitWins = 0;
 if(!S.training) S.training = {sessions:0, addCorrect:0, subCorrect:0, mulCorrect:0, kanjiCorrect:0, bestCombo:0, perfectSessions:0};
 if(typeof S.training.perfectSessions !== "number") S.training.perfectSessions = 0;
 if(typeof S.inputCorrect !== "number") S.inputCorrect = 0;
+if(typeof S.tickets !== "number") S.tickets = 0;
+if(!S.arcade) S.arcade = {owned:{}, pulls:0};
+if(!S.arcade.owned) S.arcade.owned = {};
+if(typeof S.arcade.pulls !== "number") S.arcade.pulls = 0;
 
 /* ============ 手持ちモンスター（ポケモン風バトル）============
    最大3体。レベルはXPから逆算（保存はxpのみ）、個体値(iv)はなかまにした瞬間に1回だけ振られる
@@ -692,15 +707,29 @@ function makeMonsterInstance(o){
     emoji: o.emoji, name: o.name, type: o.type, speciesBase: o.speciesBase || o.name,
     xp: 0,
     iv: {hp: Math.floor(Math.random()*16), atk: Math.floor(Math.random()*16)},
+    boost: {hp:0, atk:0, def:0},
+    awakening: 0,
   };
 }
-function monsterLevel(inst){ return 1 + Math.floor(inst.xp/15); }
-function monsterMaxHp(inst){ return 22 + monsterLevel(inst)*4 + inst.iv.hp; }
-function monsterAtk(inst){ return 5 + Math.floor(monsterLevel(inst)*0.8) + Math.floor(inst.iv.atk/3); }
+/* レベルの上限（げんかい）。ふつうはLEVEL_CAP_BASEで頭打ちになるが、超レアの「モンスターのたましい」で
+   限界突破（覚醒）すると上限が広がり、たまっていた経験値ぶんいっきにレベルが上がる。個体値(iv)も
+   覚醒のたびに通常の0〜15の枠を超えて伸びる。 */
+const LEVEL_CAP_BASE = 20, LEVEL_CAP_STEP = 15, AWAKEN_IV_BONUS = 3;
+function levelCap(inst){ return LEVEL_CAP_BASE + (inst.awakening||0)*LEVEL_CAP_STEP; }
+function monsterLevel(inst){ return Math.min(1 + Math.floor(inst.xp/15), levelCap(inst)); }
+function isAtLevelCap(inst){ return monsterLevel(inst) >= levelCap(inst); }
+function monsterMaxHp(inst){ return 22 + monsterLevel(inst)*4 + inst.iv.hp + (inst.boost?inst.boost.hp:0); }
+function monsterAtk(inst){ return 5 + Math.floor(monsterLevel(inst)*0.8) + Math.floor(inst.iv.atk/3) + (inst.boost?inst.boost.atk:0); }
+function monsterDef(inst){ return inst.boost ? inst.boost.def : 0; }
 if(!S.team || !S.team.members || !S.team.members.length){
   S.team = {members:[makeMonsterInstance(STARTER_TEMPLATE)], activeIndex:0};
 }
 if(typeof S.team.activeIndex !== "number" || S.team.activeIndex<0 || S.team.activeIndex>=S.team.members.length) S.team.activeIndex = 0;
+S.team.members.forEach(t=>{
+  if(!t.boost) t.boost = {hp:0, atk:0, def:0};
+  if(typeof t.awakening !== "number") t.awakening = 0;
+});
+if(!S.itemBox) S.itemBox = {};
 function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
 function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 
@@ -744,6 +773,114 @@ function levelInfo(xp){
   return {lvl, cur:xp-base, need, title:TITLES[Math.min(TITLES.length-1, Math.floor((lvl-1)/3))]};
 }
 
+/* ============ まなびゲーセン（ガチャガチャ景品交換） ============
+   問題に正解するとチケットがたまる。アメリカのゲームセンターの「チケット交換所」のように、
+   たまったチケットをガチャガチャにつぎこんで景品を集める、勉強と直接は関係のない「遊び」の要素。 */
+const RARITY_INFO = {
+  common:{name:"コモン",       color:"var(--sub)"},
+  rare:  {name:"レア",         color:"var(--math)"},
+  super: {name:"スーパーレア", color:"#c026d3"},
+  ultra: {name:"ウルトラレア", color:"var(--gold)"},
+};
+const PRIZES = [
+  {id:"yoyo",   emoji:"🪀", name:"ヨーヨー",           rarity:"common"},
+  {id:"balloon",emoji:"🎈", name:"風船",               rarity:"common"},
+  {id:"bear",   emoji:"🧸", name:"くまのぬいぐるみ",   rarity:"common"},
+  {id:"dice",   emoji:"🎲", name:"サイコロチャーム",   rarity:"common"},
+  {id:"pad",    emoji:"🕹️", name:"レトロコントローラー", rarity:"common"},
+  {id:"shades", emoji:"😎", name:"サングラス",         rarity:"common"},
+  {id:"clover", emoji:"🍀", name:"四つ葉のクローバー", rarity:"common"},
+  {id:"dart",   emoji:"🎯", name:"ダーツピンバッジ",   rarity:"common"},
+  {id:"pin",    emoji:"🎳", name:"ボウリングピン",     rarity:"common"},
+  {id:"racket", emoji:"🏓", name:"卓球ラケット",       rarity:"common"},
+  {id:"crown",  emoji:"👑", name:"金の王冠",           rarity:"rare"},
+  {id:"trophy", emoji:"🏆", name:"優勝トロフィー",     rarity:"rare"},
+  {id:"rocket", emoji:"🚀", name:"ロケット模型",       rarity:"rare"},
+  {id:"ufo",    emoji:"🛸", name:"UFO模型",            rarity:"rare"},
+  {id:"rainbow",emoji:"🌈", name:"レインボーストーン", rarity:"rare"},
+  {id:"lamp",   emoji:"🧞", name:"魔法のランプ",       rarity:"rare"},
+  {id:"gem",    emoji:"💎", name:"ダイヤモンド",       rarity:"super"},
+  {id:"unicorn",emoji:"🦄", name:"ユニコーンフィギュア", rarity:"super"},
+  {id:"dragon", emoji:"🐉", name:"ドラゴンフィギュア", rarity:"super"},
+  {id:"star",   emoji:"🌠", name:"伝説の流れ星",       rarity:"ultra"},
+];
+const GACHA_COST = 15, GACHA_MULTI_N = 5, GACHA_MULTI_COST = 65;
+function pickPrize(){
+  const r = Math.random()*100;
+  let tier;
+  if(r < 1) tier = "ultra";
+  else if(r < 1+7) tier = "super";
+  else if(r < 1+7+22) tier = "rare";
+  else tier = "common";
+  const pool = PRIZES.filter(p=>p.rarity===tier);
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+function grantPrize(p){
+  const isNew = !S.arcade.owned[p.id];
+  S.arcade.owned[p.id] = (S.arcade.owned[p.id]||0) + 1;
+  S.arcade.pulls++;
+  const dupBonus = isNew ? 0 : 3;
+  if(dupBonus) S.tickets += dupBonus;
+  return {prize:p, isNew, dupBonus};
+}
+
+/* ============ モンスターのドロップアイテム（強化素材） ============
+   バトルに勝つとランダムでモンスター素材をひろう。ボックス（アイテムボックス）にためて眺めたり、
+   手持ちモンスターに使って合成し、ステータスをきょうかしたりできる。 */
+const ITEMS = [
+  {id:"scale",  emoji:"🐚", name:"モンスターのウロコ",   rarity:"common", effect:{hp:2}},
+  {id:"bone",   emoji:"🦴", name:"かたいほね",           rarity:"common", effect:{hp:1, def:1}},
+  {id:"feather",emoji:"🪶", name:"かるいはね",           rarity:"common", effect:{atk:1}},
+  {id:"fang",   emoji:"🦷", name:"するどいキバ",         rarity:"rare",   effect:{atk:2}},
+  {id:"horn",   emoji:"🦌", name:"ふしぎな角",           rarity:"rare",   effect:{def:2}},
+  {id:"core",   emoji:"🔮", name:"エネルギーコア",       rarity:"super",  effect:{hp:3, atk:3}},
+  {id:"crystal",emoji:"💠", name:"かがやく結晶",         rarity:"super",  effect:{def:4}},
+  {id:"soul",   emoji:"👻", name:"モンスターのたましい", rarity:"ultra",  effect:{}, awaken:true},
+];
+const BOOST_CAP = {hp:60, atk:30, def:20};
+const AWAKEN_ITEM_ID = "soul";
+function pickItemDrop(){
+  const r = Math.random()*100;
+  let tier;
+  if(r < 3) tier = "ultra";
+  else if(r < 3+9) tier = "super";
+  else if(r < 3+9+33) tier = "rare";
+  else tier = "common";
+  const pool = ITEMS.filter(it=>it.rarity===tier);
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+function itemBoxCount(id){ return S.itemBox[id]||0; }
+/* アイテムを1個消費してモンスターをきょうか。上限に達したステータスは伸びない（他のステータスは伸びる）。 */
+function useItemOnMonster(itemId, inst){
+  const item = ITEMS.find(it=>it.id===itemId);
+  if(!item || itemBoxCount(itemId)<=0) return false;
+  let applied = false;
+  Object.entries(item.effect).forEach(([stat,amt])=>{
+    const cap = BOOST_CAP[stat];
+    if(inst.boost[stat] < cap){
+      inst.boost[stat] = Math.min(cap, inst.boost[stat]+amt);
+      applied = true;
+    }
+  });
+  if(!applied) return false;
+  S.itemBox[itemId]--;
+  if(S.itemBox[itemId]<=0) delete S.itemBox[itemId];
+  save();
+  return true;
+}
+/* 超レアの「モンスターのたましい」を1個消費して限界突破（覚醒）。レベル上限が広がり、
+   たまっていた経験値ぶんいっきにレベルアップ。個体値も通常の0〜15の枠を超えて伸びる。 */
+function awakenMonster(inst){
+  if(itemBoxCount(AWAKEN_ITEM_ID) <= 0) return false;
+  inst.awakening = (inst.awakening||0) + 1;
+  inst.iv.hp += AWAKEN_IV_BONUS;
+  inst.iv.atk += AWAKEN_IV_BONUS;
+  S.itemBox[AWAKEN_ITEM_ID]--;
+  if(S.itemBox[AWAKEN_ITEM_ID]<=0) delete S.itemBox[AWAKEN_ITEM_ID];
+  save();
+  return true;
+}
+
 /* バッジ */
 const BADGES = [
   {id:"first",   emoji:"🎯", name:"はじめの一歩",   desc:"はじめてのクエストをクリア",           check:()=>S.sessions>=1},
@@ -778,6 +915,12 @@ const BADGES = [
   {id:"dojop3",  emoji:"🔥", name:"修行の鬼",       desc:"修行の部屋で全問正解（パーフェクト）を3回達成する", check:()=>S.training.perfectSessions>=3},
   {id:"catch1",  emoji:"🎣", name:"はじめての仲間", desc:"バトルでモンスターをはじめてなかまにする",       check:()=>S.team.members.length>=2},
   {id:"fullparty", emoji:"🎒", name:"フルパーティ", desc:"手持ちモンスターを3体そろえる",                 check:()=>S.team.members.length>=3},
+  {id:"arcade1",   emoji:"🎟️", name:"はじめてのガチャ", desc:"まなびゲーセンでガチャをはじめて回す",       check:()=>S.arcade.pulls>=1},
+  {id:"arcadeAll", emoji:"🎁", name:"景品コンプリート", desc:"まなびゲーセンの景品をすべて集める",         check:()=>Object.keys(S.arcade.owned).length>=PRIZES.length},
+  {id:"forge1",    emoji:"🔧", name:"はじめての合成", desc:"アイテムを使ってモンスターをはじめて強化する", check:()=>S.team.members.some(t=>t.boost && (t.boost.hp+t.boost.atk+t.boost.def)>0)},
+  {id:"forgeMax",  emoji:"🛡️", name:"剛性の壁",       desc:"モンスターの剛性を上限まで高める",             check:()=>S.team.members.some(t=>t.boost && t.boost.def>=BOOST_CAP.def)},
+  {id:"awaken1",   emoji:"🌟", name:"限界突破",       desc:"モンスターのたましいでモンスターをはじめて覚醒させる", check:()=>S.team.members.some(t=>(t.awakening||0)>=1)},
+  {id:"awaken3",   emoji:"✨", name:"覚醒の極意",     desc:"1体のモンスターを3回覚醒させる",               check:()=>S.team.members.some(t=>(t.awakening||0)>=3)},
 ];
 function checkNewBadges(){
   const got = BADGES.filter(b=>!S.badges.includes(b.id) && b.check());
@@ -862,7 +1005,7 @@ let currentTab = "home";
 function nav(tab){
   currentTab = tab;
   document.getElementById("nav").innerHTML = [
-    ["home","🏠","ホーム"],["battle","⚔️","バトル"],["train","💪","特訓"],["badges","🏆","バッジ"],["science","🧠","しくみ"]
+    ["home","🏠","ホーム"],["battle","⚔️","バトル"],["train","💪","特訓"],["arcade","🎮","ゲーセン"],["badges","🏆","バッジ"],["science","🧠","しくみ"]
   ].map(([t,ico,label]) =>
     `<button class="${t===tab?"active":""}" onclick="go('${t}')"><span class="ico">${ico}</span>${label}</button>`
   ).join("");
@@ -872,6 +1015,7 @@ function go(tab){
   if(tab==="home") renderHome();
   else if(tab==="battle") renderBattle();
   else if(tab==="train") renderTrain();
+  else if(tab==="arcade") renderArcade();
   else if(tab==="badges") renderBadges();
   else if(tab==="science") renderScience();
 }
@@ -926,6 +1070,7 @@ function renderHome(){
       </div>
       <button class="btn-main" onclick="startQuest()">▶ 今日のクエストに出発（${QUEST_SIZE}問）</button>
       <button class="btn-sub" onclick="go('battle')">⚔️ まなびバトルで腕だめし${S.battle.stage<MONSTERS.length?`（つぎの相手：${MONSTERS[S.battle.stage].emoji} ${MONSTERS[S.battle.stage].name}）`:"（全モンスター制覇！）"}</button>
+      <button class="btn-sub" onclick="go('arcade')">🎮 まなびゲーセン（🎫 ${S.tickets}チケット）</button>
       <div class="sub center" style="margin-top:8px">復習${Math.min(due,QUEST_SIZE)}問 ＋ 新しい問題${Math.max(0,Math.min(QUEST_SIZE-due, fresh))}問を教科ミックスで出題<br>📚 中1・${termName()}（〜${monthLabel(schoolMonth())}）に習う単元から。未習単元は「特訓」で先取りできます</div>
     </div>
 
@@ -1015,7 +1160,7 @@ function makeDojoQuestion(cat){
   return {q:p.q, ans:p.ans, hint:"数字で入力"};
 }
 window.startDojo = (cat)=>{
-  dojo = {cat, i:0, correct:0, combo:0, gainedXp:0, answeredThisQ:false, currentType:"input", current:null};
+  dojo = {cat, i:0, correct:0, combo:0, gainedXp:0, gainedTickets:0, answeredThisQ:false, currentType:"input", current:null};
   nextDojoQuestion();
 };
 function nextDojoQuestion(){
@@ -1060,11 +1205,12 @@ window.answerDojo = ()=>{
   if(correct){
     soundOK();
     dojo.i++; dojo.correct++; dojo.combo++;
-    const xp = 2;
+    const xp = 2, tix = 1;
     S.xp += xp; dojo.gainedXp += xp;
+    S.tickets += tix; dojo.gainedTickets += tix;
     S.training[DOJO_CATS[dojo.cat].statKey]++;
     if(dojo.combo > S.training.bestCombo) S.training.bestCombo = dojo.combo;
-    fbHtml = `<div class="feedback ok"><b>⭕ せいかい！ +${xp} XP</b></div>
+    fbHtml = `<div class="feedback ok"><b>⭕ せいかい！ +${xp} XP ｜ 🎫+${tix}</b></div>
       <button class="btn-main" onclick="nextDojoQuestion()">次へ ▶</button>`;
   }else{
     soundNG();
@@ -1079,7 +1225,7 @@ window.answerDojo = ()=>{
 };
 function finishDojo(){
   S.training.sessions++;
-  if(dojo.correct===DOJO_SIZE) S.training.perfectSessions++;
+  if(dojo.correct===DOJO_SIZE){ S.training.perfectSessions++; S.tickets += 3; dojo.gainedTickets += 3; }
   updateStreak();
   const newBadges = checkNewBadges();
   save();
@@ -1096,6 +1242,7 @@ function finishDojo(){
         <div><div class="v">${acc}%</div><div class="k">正答率</div></div>
         <div><div class="v">⚡${S.training.bestCombo}</div><div class="k">最大連続正解</div></div>
       </div>
+      <div class="sub center" style="margin-bottom:6px">🎫 ${doneDojo.gainedTickets}チケット獲得</div>
       ${newBadges.map(b=>`<div class="feedback ok" style="margin-bottom:10px"><b>${b.emoji} バッジ獲得「${b.name}」</b><br><span class="sub">${b.desc}</span></div>`).join("")}
       <button class="btn-main" onclick="startDojo('${doneDojo.cat}')">🔥 もう1回修行する</button>
       <button class="btn-sub" onclick="setTrainSection('dojo')">修行の部屋にもどる</button>
@@ -1130,7 +1277,7 @@ function startSession(ids, title){
   sess = {
     title, queue:ids.slice(), total:ids.length,
     wrongOnce:new Set(), cleared:new Set(),
-    firstTryCorrect:0, gainedXp:0, reviewCount:ids.filter(i=>S.items[i]).length,
+    firstTryCorrect:0, gainedXp:0, gainedTickets:0, reviewCount:ids.filter(i=>S.items[i]).length,
     answeredThisQ:false,
   };
   nextQuestion();
@@ -1185,14 +1332,16 @@ function settleAnswer(id, correct){
   if(correct){
     soundOK();
     const xp = wasWrongBefore ? 5 : 10;
+    const tix = 1;
     S.xp += xp; sess.gainedXp += xp; S.correct++;
+    S.tickets += tix; sess.gainedTickets += tix;
     if(!wasWrongBefore){ sess.firstTryCorrect++; if(q.t==="input") S.inputCorrect++; }
     if(wasReview && !wasWrongBefore) S.reviewDone++;
     sess.cleared.add(id);
     scheduleAnswer(id, !wasWrongBefore, wasWrongBefore);
     const st = S.items[id];
     const days = INTERVALS[st.stage];
-    html = `<div class="feedback ok"><b>⭕ 正解！ +${xp} XP</b><br>${esc(q.e)}<br>
+    html = `<div class="feedback ok"><b>⭕ 正解！ +${xp} XP ｜ 🎫+${tix}</b><br>${esc(q.e)}<br>
       <span class="sub">📅 次の復習：${days===0?"今日中":days+"日後"}（思い出す間隔を少しずつ広げると記憶が長持ちします）</span></div>
       <button class="btn-main" onclick="nextQuestion()">次へ ▶</button>`;
   }else{
@@ -1311,7 +1460,7 @@ window.nextQuestion = nextQuestion;
 function finishSession(){
   const perfect = sess.wrongOnce.size===0;
   S.sessions++;
-  if(perfect) S.perfectRuns++;
+  if(perfect){ S.perfectRuns++; S.tickets += 5; sess.gainedTickets += 5; }
 
   updateStreak();
   const newBadges = checkNewBadges();
@@ -1335,11 +1484,13 @@ function finishSession(){
         <div><div class="v">${acc}%</div><div class="k">一発正解率</div></div>
         <div><div class="v">🔥${S.streak}</div><div class="k">連続日数</div></div>
       </div>
+      <div class="sub center" style="margin-bottom:6px">🎫 ${doneSess.gainedTickets}チケット獲得（${perfect?"パーフェクトボーナス+5込み":"まなびゲーセンで景品と交換できるよ"}）</div>
       ${leveledUp?`<div class="feedback ok" style="margin-bottom:10px"><b>🎊 レベルアップ！ Lv.${lv.lvl} ${lv.title} になった！</b></div>`:""}
       ${newBadges.map(b=>`<div class="feedback ok" style="margin-bottom:10px"><b>${b.emoji} バッジ獲得「${b.name}」</b><br><span class="sub">${b.desc}</span></div>`).join("")}
       <div class="sub" style="margin:8px 0 4px">明日の復習予定：${dueTomorrow}問<br>寝ている間に記憶は整理されます。また明日つづきをやろう！</div>
       <button class="btn-main" onclick="go('home')">ホームへもどる</button>
       <button class="btn-sub" onclick="startQuest()">もう1クエスト挑戦する</button>
+      <button class="btn-sub" onclick="go('arcade')">🎮 まなびゲーセンへ</button>
     </div>`;
   nav("home");
 }
@@ -1429,7 +1580,7 @@ window.startBattle = (mi)=>{
   S.team.members.forEach(t=>{ teamHp[t.id] = monsterMaxHp(t); });
   const activeId = (S.team.members[S.team.activeIndex] || S.team.members[0]).id;
   btl = {mi, m, ehp:m.hp, teamHp, activeId, queue:battleQueue(), combo:0,
-         gainedXp:0, answeredThisQ:false, currentOrder:null, next:null, tookDamage:false};
+         gainedXp:0, gainedTickets:0, answeredThisQ:false, currentOrder:null, next:null, tookDamage:false};
   nextBattleQuestion();
 };
 function activeMember(){ return S.team.members.find(t=>t.id===btl.activeId); }
@@ -1523,11 +1674,12 @@ window.answerBattle = (pos)=>{
     btl.combo++;
     if(btl.combo > S.battle.maxCombo) S.battle.maxCombo = btl.combo;
     S.xp += 10; btl.gainedXp += 10;
+    S.tickets += 1; btl.gainedTickets += 1;
     inst.xp += 8; // 出撃中のモンスターも正解のたびに育つ
     soundOK();
     save();
     const moves = movesForType(inst.type);
-    const fbHtml = `<div class="feedback ok"><b>⭕ 正解！</b><br>${esc(q.e)}<br>
+    const fbHtml = `<div class="feedback ok"><b>⭕ 正解！ 🎫+1</b><br>${esc(q.e)}<br>
         <span class="sub">${btl.combo>=2?`⚡${btl.combo}コンボ中！ `:""}わざを選んでこうげきしよう</span></div>
       <div class="row" style="gap:8px;margin-top:8px">
         ${moves.map((mv,mi2)=>`<button class="choice" style="text-align:center" onclick="useMove(${mi2})">${mv.emoji} ${mv.name}</button>`).join("")}
@@ -1540,7 +1692,8 @@ window.answerBattle = (pos)=>{
   scheduleAnswer(id, false, false);
   btl.combo = 0;
   btl.tookDamage = true;
-  const edmg = m.atk + Math.floor(Math.random()*3);
+  const rawDmg = m.atk + Math.floor(Math.random()*3);
+  const edmg = Math.max(1, rawDmg - monsterDef(inst));
   btl.teamHp[inst.id] = Math.max(0, btl.teamHp[inst.id] - edmg);
   soundNG();
   const pl = document.getElementById("player");
@@ -1637,16 +1790,21 @@ function winBattle(){
   const firstClear = (mi === S.battle.stage);
   const bonus = 20 + m.lv*3;
   S.xp += bonus; btl.gainedXp += bonus;
+  S.tickets += 5; btl.gainedTickets += 5;
   S.battle.wins++;
   if(m.secret && !btl.tookDamage) S.battle.secretNoHitWins++;
   if(firstClear) S.battle.stage++;
   const inst = activeMember();
   inst.xp += 15; // しょうりボーナス経験値
+  let drop = pickItemDrop();
+  if(m.secret){ let tries=0; while(drop.rarity==="common" && tries<5){ drop = pickItemDrop(); tries++; } } // ゲキムズ隠しボスはレア以上を確定させやすくする
+  S.itemBox[drop.id] = (S.itemBox[drop.id]||0) + 1;
   updateStreak();
   const newBadges = checkNewBadges();
   save();
   soundWin();
   const nextM = MONSTERS[S.battle.stage];
+  const dropInfo = RARITY_INFO[drop.rarity];
   const doneBtl = btl; btl = null;
   app.innerHTML = `
     <div class="card center">
@@ -1657,9 +1815,16 @@ function winBattle(){
         <div><div class="v">${inst.emoji} Lv.${monsterLevel(inst)}</div><div class="k">${esc(inst.name)}</div></div>
         <div><div class="v">🔥${S.streak}</div><div class="k">連続日数</div></div>
       </div>
+      <div class="sub center" style="margin-bottom:6px">🎫 ${doneBtl.gainedTickets}チケット獲得（しょうりボーナス+5込み）</div>
+      <div class="feedback ok" style="margin-bottom:10px">
+        <b>${drop.emoji} 「${esc(drop.name)}」を手に入れた！</b>
+        <span class="rarity-pill" style="background:${dropInfo.color}22;color:${dropInfo.color};border:1px solid ${dropInfo.color};margin-left:6px">${dropInfo.name}</span>
+        <br><span class="sub">アイテムボックスに保存された。手持ちにあずけて合成すると強化できるよ</span>
+      </div>
       ${firstClear && nextM ? `<div class="feedback ok" style="margin-bottom:10px"><b>😈 つぎのあいて「${nextM.name}」が あらわれた！</b></div>`:""}
       ${newBadges.map(b=>`<div class="feedback ok" style="margin-bottom:10px"><b>${b.emoji} バッジ獲得「${b.name}」</b><br><span class="sub">${b.desc}</span></div>`).join("")}
       ${m.capturable?`<button class="btn-main" onclick="captureMonster(${mi})">🎣 なかまにする</button>`:""}
+      <button class="btn-sub" onclick="viewTeam()">🎒 手持ち・アイテムボックスを見る</button>
       <button class="btn-sub" onclick="go('battle')">バトルにもどる</button>
       <button class="btn-sub" onclick="go('home')">ホームへ</button>
     </div>`;
@@ -1690,30 +1855,115 @@ function renderTeam(){
   const rows = S.team.members.map((t,idx)=>{
     const maxHp = monsterMaxHp(t);
     const atk = monsterAtk(t);
+    const def = monsterDef(t);
     const moves = movesForType(t.type);
     const isLead = idx===S.team.activeIndex;
+    const boosted = t.boost && (t.boost.hp||t.boost.atk||t.boost.def);
     return `<div class="card">
       <div class="row">
         <span style="font-size:36px">${t.emoji}</span>
         <div class="grow">
-          <div class="row"><b>${esc(t.name)}</b><span class="pill">Lv.${monsterLevel(t)}</span>${isLead?'<span class="pill" style="border-color:var(--gold);color:var(--gold)">先頭</span>':""}</div>
-          <div class="sub" style="margin-top:4px">HP ${maxHp}｜こうげき ${atk}｜タイプ：${t.type?SUBJECTS[t.type].emoji+SUBJECTS[t.type].name:"なし"}</div>
-          <div class="sub">個体値：HP+${t.iv.hp} こうげき+${t.iv.atk}（0〜15）</div>
+          <div class="row"><b>${esc(t.name)}</b><span class="pill">Lv.${monsterLevel(t)}</span>${isAtLevelCap(t)?'<span class="pill" style="border-color:var(--ng);color:var(--ng)">🔒上限</span>':""}${(t.awakening||0)>0?`<span class="pill" style="border-color:var(--gold);color:var(--gold)">🌟覚醒×${t.awakening}</span>`:""}${isLead?'<span class="pill" style="border-color:var(--gold);color:var(--gold)">先頭</span>':""}</div>
+          <div class="sub" style="margin-top:4px">HP ${maxHp}｜こうげき ${atk}｜剛性(防御) ${def}｜タイプ：${t.type?SUBJECTS[t.type].emoji+SUBJECTS[t.type].name:"なし"}</div>
+          <div class="sub">個体値：HP+${t.iv.hp} こうげき+${t.iv.atk}（通常0〜15、覚醒でさらに上昇）</div>
+          ${boosted?`<div class="sub">合成による強化：HP+${t.boost.hp} こうげき+${t.boost.atk} 剛性+${t.boost.def}</div>`:""}
           <div class="sub">わざ：${moves.map(mv=>`${mv.emoji}${mv.name}`).join(" ／ ")}</div>
         </div>
       </div>
       <div class="row" style="margin-top:10px;gap:8px">
+        <button class="btn-sub" style="margin-top:0" onclick="renderReinforce(${t.id})">🔧 強化する</button>
         ${isLead?"":`<button class="btn-sub" style="margin-top:0" onclick="setLead(${idx})">先頭にする</button>`}
         ${S.team.members.length>1?`<button class="btn-sub" style="margin-top:0;color:var(--ng)" onclick="releaseMember(${idx})">にがす</button>`:""}
       </div>
     </div>`;
   }).join("");
+  const boxIds = Object.keys(S.itemBox).filter(id=>S.itemBox[id]>0);
+  const boxGrid = ITEMS.map(it=>{
+    const cnt = itemBoxCount(it.id);
+    const owned = cnt>0;
+    const info = RARITY_INFO[it.rarity];
+    return `<div class="prize-item ${owned?"":"locked"}">
+      <span class="rarity-pill" style="background:${info.color}22;color:${info.color};border:1px solid ${info.color}">${info.name}</span>
+      <span class="pemoji">${owned?it.emoji:"❓"}</span>
+      <div class="pname">${owned?esc(it.name):"？？？"}</div>
+      ${cnt>0?`<div class="pcount">×${cnt}</div>`:""}
+    </div>`;
+  }).join("");
   app.innerHTML = `<h1 style="margin-bottom:12px">🎒 手持ちモンスター（${S.team.members.length}/3）</h1>
     <div class="sub" style="margin-bottom:12px">バトルで通常モンスターを倒すとここに新しい仲間が増える。先頭のモンスターがバトルの出撃モンスターになる。</div>
     ${rows}
+    <div class="card">
+      <h2>📦 アイテムボックス（${boxIds.length}/${ITEMS.length}種）</h2>
+      <div class="sub" style="margin-bottom:6px">バトルの勝利でひろった素材。モンスターの「強化する」から使って合成できる。</div>
+      <div class="prize-grid">${boxGrid}</div>
+    </div>
     <button class="btn-sub" onclick="go('battle')">⬅ バトルにもどる</button>`;
 }
 window.viewTeam = renderTeam;
+function renderReinforce(monsterId, justEarnedBadges){
+  const t = S.team.members.find(m=>m.id===monsterId);
+  if(!t){ renderTeam(); return; }
+  justEarnedBadges = justEarnedBadges || [];
+  const owned = ITEMS.filter(it=>itemBoxCount(it.id)>0 && !it.awaken);
+  const rows = owned.length ? owned.map(it=>{
+    const info = RARITY_INFO[it.rarity];
+    const effTxt = Object.entries(it.effect).map(([k,v])=>({hp:"HP",atk:"こうげき",def:"剛性"}[k]+"+"+v)).join(" ");
+    const capped = Object.keys(it.effect).every(k=>t.boost[k]>=BOOST_CAP[k]);
+    return `<button class="dojo-card" ${capped?"disabled":""} onclick="applyReinforce(${monsterId},'${it.id}')">
+      <span class="dico">${it.emoji}</span>
+      <div class="grow"><b>${esc(it.name)}</b><div class="sub">${effTxt}${capped?"（上限に到達）":""}｜のこり${itemBoxCount(it.id)}個</div></div>
+      <span class="rarity-pill" style="background:${info.color}22;color:${info.color};border:1px solid ${info.color}">${info.name}</span>
+    </button>`;
+  }).join("") : `<div class="sub center" style="padding:16px 0">アイテムボックスが空っぽ。バトルに勝って素材をひろおう！</div>`;
+  const soulItem = ITEMS.find(it=>it.id===AWAKEN_ITEM_ID);
+  const soulCount = itemBoxCount(AWAKEN_ITEM_ID);
+  app.innerHTML = `<h1 style="margin-bottom:12px">🔧 ${esc(t.name)}を強化する</h1>
+    <div class="card">
+      <div class="row">
+        <span style="font-size:36px">${t.emoji}</span>
+        <div class="grow">
+          <b>${esc(t.name)}</b> <span class="pill">Lv.${monsterLevel(t)} / 上限${levelCap(t)}</span>
+          <div class="sub" style="margin-top:4px">HP ${monsterMaxHp(t)}｜こうげき ${monsterAtk(t)}｜剛性(防御) ${monsterDef(t)}</div>
+          <div class="sub">合成による強化：HP+${t.boost.hp}/${BOOST_CAP.hp} こうげき+${t.boost.atk}/${BOOST_CAP.atk} 剛性+${t.boost.def}/${BOOST_CAP.def}</div>
+          ${isAtLevelCap(t)?'<div class="sub" style="color:var(--ng);margin-top:2px">🔒 経験値はたまっているがレベル上限。覚醒すると一気に上限が開放される！</div>':""}
+        </div>
+      </div>
+    </div>
+    ${justEarnedBadges.map(b=>`<div class="feedback ok" style="margin-bottom:10px"><b>${b.emoji} バッジ獲得「${b.name}」</b><br><span class="sub">${b.desc}</span></div>`).join("")}
+    <div class="card" style="border-color:var(--gold)">
+      <h2>🌟 限界突破（覚醒）</h2>
+      <div class="sub" style="margin-bottom:10px">超レアの${soulItem.emoji}「${soulItem.name}」を1個ささげると、レベル上限が+${LEVEL_CAP_STEP}広がり、たまっていた経験値ぶんいっきにレベルアップ。個体値（HP・こうげき）も通常の枠を超えて+${AWAKEN_IV_BONUS}ずつ永久に伸びる。覚醒回数：${t.awakening||0}回</div>
+      <button class="btn-main" ${soulCount<=0?"disabled":""} onclick="applyAwaken(${monsterId})">🌟 覚醒させる（${soulItem.emoji}のこり${soulCount}個）</button>
+    </div>
+    <div class="card">
+      <h2>📦 素材を使って合成</h2>
+      ${rows}
+    </div>
+    <button class="btn-sub" onclick="renderTeam()">⬅ 手持ちにもどる</button>`;
+}
+window.renderReinforce = renderReinforce;
+window.applyReinforce = (monsterId, itemId)=>{
+  const t = S.team.members.find(m=>m.id===monsterId);
+  if(!t) return;
+  let newBadges = [];
+  if(useItemOnMonster(itemId, t)){
+    newBadges = checkNewBadges();
+    save();
+    if(newBadges.length) soundLv();
+  }
+  renderReinforce(monsterId, newBadges);
+};
+window.applyAwaken = (monsterId)=>{
+  const t = S.team.members.find(m=>m.id===monsterId);
+  if(!t) return;
+  let newBadges = [];
+  if(awakenMonster(t)){
+    soundLv();
+    newBadges = checkNewBadges();
+    save();
+  }
+  renderReinforce(monsterId, newBadges);
+};
 window.setLead = (idx)=>{ S.team.activeIndex = idx; save(); renderTeam(); };
 window.releaseMember = (idx)=>{
   if(S.team.members.length<=1) return;
@@ -1774,6 +2024,63 @@ function renderCaptureResult(inst, newBadges){
   </div>`;
 }
 
+/* ---- まなびゲーセン（ガチャガチャ） ---- */
+function renderArcade(){
+  const ownedCount = Object.keys(S.arcade.owned).length;
+  const totalCount = PRIZES.length;
+  const grid = PRIZES.map(p=>{
+    const cnt = S.arcade.owned[p.id]||0;
+    const owned = cnt>0;
+    const info = RARITY_INFO[p.rarity];
+    return `<div class="prize-item ${owned?"":"locked"}">
+      <span class="rarity-pill" style="background:${info.color}22;color:${info.color};border:1px solid ${info.color}">${info.name}</span>
+      <span class="pemoji">${owned?p.emoji:"❓"}</span>
+      <div class="pname">${owned?esc(p.name):"？？？"}</div>
+      ${cnt>1?`<div class="pcount">×${cnt}</div>`:""}
+    </div>`;
+  }).join("");
+  app.innerHTML = `<h1 style="margin-bottom:12px">🎮 まなびゲーセン</h1>
+    <div class="card">
+      <div class="sub">クイズに正解してたまる</div>
+      <div class="big">🎫 ${S.tickets} チケット</div>
+      <div class="sub" style="margin:8px 0 12px">チケットをためてガチャガチャで景品をゲットしよう！ 同じ景品が出たら少しチケットが返ってくるよ。</div>
+      <button class="btn-main" ${S.tickets<GACHA_COST?"disabled":""} onclick="pullGacha(1)">🕹️ ガチャを1回まわす（🎫${GACHA_COST}）</button>
+      <button class="btn-sub" ${S.tickets<GACHA_MULTI_COST?"disabled":""} onclick="pullGacha(${GACHA_MULTI_N})">🎉 ${GACHA_MULTI_N}連ガチャ（🎫${GACHA_MULTI_COST}・おトク！）</button>
+    </div>
+    <div class="card">
+      <h2>🎁 景品コレクション（${ownedCount}/${totalCount}）</h2>
+      <div class="prize-grid">${grid}</div>
+    </div>
+    <div class="card sub center">これまでガチャを回した回数：${S.arcade.pulls}回</div>`;
+}
+window.pullGacha = (n)=>{
+  const cost = n===GACHA_MULTI_N ? GACHA_MULTI_COST : GACHA_COST;
+  if(S.tickets < cost) return;
+  S.tickets -= cost;
+  const results = [];
+  for(let i=0;i<n;i++) results.push(grantPrize(pickPrize()));
+  const newBadges = checkNewBadges();
+  save();
+  soundLv();
+  renderGachaResult(results, newBadges);
+};
+function renderGachaResult(results, newBadges){
+  const cards = results.map(r=>{
+    const info = RARITY_INFO[r.prize.rarity];
+    return `<div class="card center" style="padding:16px">
+      <span class="rarity-pill" style="background:${info.color}22;color:${info.color};border:1px solid ${info.color}">${info.name}</span>
+      <div class="result-emoji" style="margin:6px 0">${r.prize.emoji}</div>
+      <div style="font-weight:800">${esc(r.prize.name)}</div>
+      ${r.isNew?'<div class="sub" style="color:var(--gold);font-weight:800;margin-top:4px">✨ NEW！</div>':`<div class="sub" style="margin-top:4px">かぶった！ 🎫+${r.dupBonus}</div>`}
+    </div>`;
+  }).join("");
+  app.innerHTML = `<h1 class="center" style="margin-bottom:12px">🕹️ ガチャ結果</h1>
+    ${cards}
+    ${newBadges.map(b=>`<div class="feedback ok" style="margin-bottom:10px"><b>${b.emoji} バッジ獲得「${b.name}」</b><br><span class="sub">${b.desc}</span></div>`).join("")}
+    <button class="btn-main" onclick="go('arcade')">🎮 ゲーセンにもどる</button>`;
+  nav("arcade");
+}
+
 /* ---- バッジ ---- */
 function renderBadges(){
   app.innerHTML = `<h1 style="margin-bottom:12px">🏆 バッジコレクション</h1>
@@ -1816,7 +2123,11 @@ function renderScience(){
     <p>まちがえた問題はクエストの最後にもう一度出ます。<b>自力で思い出して正解し直す</b>ことが、次に同じミスをしない一番の近道です。</p>
 
     <h3>6. ゲーミフィケーション — 続けられる仕組み</h3>
-    <p>XP・レベル・連続日数・バッジは「今日もやろう」という気持ちを支えるためのものです。学習は<b>短時間でも毎日続ける</b>ことが最も効果的だからこそ、続けたくなる仕掛けを入れています。「まなびバトル」も同じで、なかまを集めて育てるポケモン風の対戦という形をとっていますが、中身はすべて検索練習（クイズ）です。バトル中の解答も復習スケジュールにきちんと記録されます。5教科を五角形の相性にした「タイプ相性」は、5教科をまんべんなく学ぶきっかけになるよう設計しています。</p>
+    <p>学習そのものとの関係が異なる4つの「ごほうび」を、役割ごとに分けて用意しています。</p>
+    <p><b>📈 XP・レベル・連続日数・バッジ：</b> クイズに正解するだけでたまる、いちばん基本のごほうびです。「今日もやろう」という気持ちを支えるためのもので、学習は<b>短時間でも毎日続ける</b>ことが最も効果的だからこそ、続けたくなる仕掛けを入れています。</p>
+    <p><b>⚔️ まなびバトル：</b> なかまを集めて育てるポケモン風の対戦という形をとっていますが、中身はすべて検索練習（クイズ）で、解答は復習スケジュールにきちんと記録されます。5教科を五角形の相性にした「タイプ相性」は、5教科をまんべんなく学ぶきっかけになるよう設計しています。</p>
+    <p><b>🎮 まなびゲーセン（チケット→ガチャ→景品）：</b> クイズに正解してたまる🎫チケットでガチャガチャを回し、景品コレクションを集める、勉強の内容とは直接関係のない純粋な「お楽しみ」要素です。景品はモンスターの強さには影響しません。学習効果を主張するものではありませんが、アメリカのゲームセンターのチケット交換所のように「ためて、交換する」楽しさが、次のクエストに向かうきっかけの一つになります。</p>
+    <p><b>📦 アイテム収集・モンスター強化：</b> チケットとは別の経路で、バトルの勝利のたびに📦モンスター素材を1個ひろいます。手持ちタブでこれを手持ちモンスターに使って合成すると、HP・こうげき・剛性（防御）が永続的に強くなり、剛性が高いほどバトルで受けるダメージが減ります。超レアの「たましい」を使う「限界突破（覚醒）」では、レベルの上限そのものを広げられます。こちらはバトルというもう一つの検索練習にもう一度挑戦したくなるための仕掛けです。</p>
     <cite>Hamari et al. (2014) のレビュー／自己決定理論 (Deci & Ryan)：達成の可視化は内発的動機づけを支える</cite>
 
     <h3>7. カリキュラム連動 — 習ったところから出題</h3>
