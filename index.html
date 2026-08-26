@@ -700,6 +700,7 @@ if(typeof S.arcade.pulls !== "number") S.arcade.pulls = 0;
    最大3体。レベルはXPから逆算（保存はxpのみ）、個体値(iv)はなかまにした瞬間に1回だけ振られる
    ―同じ種族でも再戦のたびに違う個体値のものをゲットできる。HPはバトル開始のたびに全回復する。 */
 const STARTER_TEMPLATE = {emoji:"🐥", name:"マナビー", type:"jpn", speciesBase:"マナビー"};
+const LEVEL_CAP_BASE = 20, LEVEL_CAP_STEP = 15, AWAKEN_IV_BONUS = 3;
 function makeMonsterInstance(o){
   S.nextMonsterId = (S.nextMonsterId||0) + 1;
   return {
@@ -709,13 +710,14 @@ function makeMonsterInstance(o){
     iv: {hp: Math.floor(Math.random()*16), atk: Math.floor(Math.random()*16)},
     boost: {hp:0, atk:0, def:0},
     awakening: 0,
+    levelCap: LEVEL_CAP_BASE,
   };
 }
 /* レベルの上限（げんかい）。ふつうはLEVEL_CAP_BASEで頭打ちになるが、超レアの「モンスターのたましい」で
    限界突破（覚醒）すると上限が広がり、たまっていた経験値ぶんいっきにレベルが上がる。個体値(iv)も
-   覚醒のたびに通常の0〜15の枠を超えて伸びる。 */
-const LEVEL_CAP_BASE = 20, LEVEL_CAP_STEP = 15, AWAKEN_IV_BONUS = 3;
-function levelCap(inst){ return LEVEL_CAP_BASE + (inst.awakening||0)*LEVEL_CAP_STEP; }
+   覚醒のたびに通常の0〜15の枠を超えて伸びる。上限はモンスターごとに保存し、あとから機能を追加しても
+   既存のモンスターの「すでに到達していたレベル」を後retroactiveに下げないようにする（マイグレーションで担保）。 */
+function levelCap(inst){ return inst.levelCap; }
 function monsterLevel(inst){ return Math.min(1 + Math.floor(inst.xp/15), levelCap(inst)); }
 function isAtLevelCap(inst){ return monsterLevel(inst) >= levelCap(inst); }
 function monsterMaxHp(inst){ return 22 + monsterLevel(inst)*4 + inst.iv.hp + (inst.boost?inst.boost.hp:0); }
@@ -728,6 +730,12 @@ if(typeof S.team.activeIndex !== "number" || S.team.activeIndex<0 || S.team.acti
 S.team.members.forEach(t=>{
   if(!t.boost) t.boost = {hp:0, atk:0, def:0};
   if(typeof t.awakening !== "number") t.awakening = 0;
+  // レベル上限を導入する前からのセーブデータは、そのモンスターがすでに経験値で到達していたレベルを
+  // 上限として引き継ぐ（覚醒していないのに手持ちのレベルが下がって見えるのを防ぐ）。
+  if(typeof t.levelCap !== "number"){
+    const naturalLevel = 1 + Math.floor(t.xp/15);
+    t.levelCap = Math.max(LEVEL_CAP_BASE, naturalLevel);
+  }
 });
 if(!S.itemBox) S.itemBox = {};
 function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
@@ -873,6 +881,7 @@ function useItemOnMonster(itemId, inst){
 function awakenMonster(inst){
   if(itemBoxCount(AWAKEN_ITEM_ID) <= 0) return false;
   inst.awakening = (inst.awakening||0) + 1;
+  inst.levelCap = (inst.levelCap||LEVEL_CAP_BASE) + LEVEL_CAP_STEP;
   inst.iv.hp += AWAKEN_IV_BONUS;
   inst.iv.atk += AWAKEN_IV_BONUS;
   S.itemBox[AWAKEN_ITEM_ID]--;
