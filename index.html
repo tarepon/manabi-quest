@@ -827,9 +827,15 @@ function grantPrize(p){
   const isNew = !S.arcade.owned[p.id];
   S.arcade.owned[p.id] = (S.arcade.owned[p.id]||0) + 1;
   S.arcade.pulls++;
-  const dupBonus = isNew ? 0 : 3;
-  if(dupBonus) S.tickets += dupBonus;
-  return {prize:p, isNew, dupBonus};
+  let dupItem = null;
+  if(!isNew){
+    // かぶった景品はチケットには戻さず、同じレアリティのモンスター強化素材に変換する
+    // （チケットで払い戻すと連続ガチャが実質割引になり、コレクションの緊張感が薄れるため）
+    const pool = ITEMS.filter(it=>it.rarity===p.rarity);
+    dupItem = pool[Math.floor(Math.random()*pool.length)];
+    S.itemBox[dupItem.id] = (S.itemBox[dupItem.id]||0) + 1;
+  }
+  return {prize:p, isNew, dupItem};
 }
 
 /* ============ モンスターのドロップアイテム（強化素材） ============
@@ -2052,7 +2058,7 @@ function renderArcade(){
     <div class="card">
       <div class="sub">クイズに正解してたまる</div>
       <div class="big">🎫 ${S.tickets} チケット</div>
-      <div class="sub" style="margin:8px 0 12px">チケットをためてガチャガチャで景品をゲットしよう！ 同じ景品が出たら少しチケットが返ってくるよ。</div>
+      <div class="sub" style="margin:8px 0 12px">チケットをためてガチャガチャで景品をゲットしよう！ 同じ景品が出たら、同じレアリティのモンスター強化素材（📦アイテムボックスへ）に変わるよ。</div>
       <button class="btn-main" ${S.tickets<GACHA_COST?"disabled":""} onclick="pullGacha(1)">🕹️ ガチャを1回まわす（🎫${GACHA_COST}）</button>
       <button class="btn-sub" ${S.tickets<GACHA_MULTI_COST?"disabled":""} onclick="pullGacha(${GACHA_MULTI_N})">🎉 ${GACHA_MULTI_N}連ガチャ（🎫${GACHA_MULTI_COST}・おトク！）</button>
     </div>
@@ -2080,7 +2086,7 @@ function renderGachaResult(results, newBadges){
       <span class="rarity-pill" style="background:${info.color}22;color:${info.color};border:1px solid ${info.color}">${info.name}</span>
       <div class="result-emoji" style="margin:6px 0">${r.prize.emoji}</div>
       <div style="font-weight:800">${esc(r.prize.name)}</div>
-      ${r.isNew?'<div class="sub" style="color:var(--gold);font-weight:800;margin-top:4px">✨ NEW！</div>':`<div class="sub" style="margin-top:4px">かぶった！ 🎫+${r.dupBonus}</div>`}
+      ${r.isNew?'<div class="sub" style="color:var(--gold);font-weight:800;margin-top:4px">✨ NEW！</div>':`<div class="sub" style="margin-top:4px">かぶった！ ${r.dupItem.emoji}「${esc(r.dupItem.name)}」に変わった（📦アイテムボックスへ）</div>`}
     </div>`;
   }).join("");
   app.innerHTML = `<h1 class="center" style="margin-bottom:12px">🕹️ ガチャ結果</h1>
@@ -2135,8 +2141,8 @@ function renderScience(){
     <p>学習そのものとの関係が異なる4つの「ごほうび」を、役割ごとに分けて用意しています。</p>
     <p><b>📈 XP・レベル・連続日数・バッジ：</b> クイズに正解するだけでたまる、いちばん基本のごほうびです。「今日もやろう」という気持ちを支えるためのもので、学習は<b>短時間でも毎日続ける</b>ことが最も効果的だからこそ、続けたくなる仕掛けを入れています。</p>
     <p><b>⚔️ まなびバトル：</b> なかまを集めて育てるポケモン風の対戦という形をとっていますが、中身はすべて検索練習（クイズ）で、解答は復習スケジュールにきちんと記録されます。5教科を五角形の相性にした「タイプ相性」は、5教科をまんべんなく学ぶきっかけになるよう設計しています。</p>
-    <p><b>🎮 まなびゲーセン（チケット→ガチャ→景品）：</b> クイズに正解してたまる🎫チケットでガチャガチャを回し、景品コレクションを集める、勉強の内容とは直接関係のない純粋な「お楽しみ」要素です。景品はモンスターの強さには影響しません。学習効果を主張するものではありませんが、アメリカのゲームセンターのチケット交換所のように「ためて、交換する」楽しさが、次のクエストに向かうきっかけの一つになります。</p>
-    <p><b>📦 アイテム収集・モンスター強化：</b> チケットとは別の経路で、バトルの勝利のたびに📦モンスター素材を1個ひろいます。手持ちタブでこれを手持ちモンスターに使って合成すると、HP・こうげき・剛性（防御）が永続的に強くなり、剛性が高いほどバトルで受けるダメージが減ります。超レアの「たましい」を使う「限界突破（覚醒）」では、レベルの上限そのものを広げられます。こちらはバトルというもう一つの検索練習にもう一度挑戦したくなるための仕掛けです。</p>
+    <p><b>🎮 まなびゲーセン（チケット→ガチャ→景品）：</b> クイズに正解してたまる🎫チケットでガチャガチャを回し、景品コレクションを集める、勉強の内容とは直接関係のない純粋な「お楽しみ」要素です。景品を持っていること自体はモンスターの強さには影響しません。学習効果を主張するものではありませんが、アメリカのゲームセンターのチケット交換所のように「ためて、交換する」楽しさが、次のクエストに向かうきっかけの一つになります。なお同じ景品が出た（かぶった）ときはチケットには戻さず、下の📦モンスター強化素材に変換します。ガチャがチケットの割引になってしまわないようにしつつ、かぶりも次の楽しみにつなげるためです。</p>
+    <p><b>📦 アイテム収集・モンスター強化：</b> バトルの勝利のたびに、またはガチャで景品がかぶったときに📦モンスター素材が手に入ります。手持ちタブでこれを手持ちモンスターに使って合成すると、HP・こうげき・剛性（防御）が永続的に強くなり、剛性が高いほどバトルで受けるダメージが減ります。超レアの「たましい」を使う「限界突破（覚醒）」では、レベルの上限そのものを広げられます。こちらはバトルというもう一つの検索練習にもう一度挑戦したくなるための仕掛けです。</p>
     <cite>Hamari et al. (2014) のレビュー／自己決定理論 (Deci & Ryan)：達成の可視化は内発的動機づけを支える</cite>
 
     <h3>7. カリキュラム連動 — 習ったところから出題</h3>
