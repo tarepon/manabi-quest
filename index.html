@@ -610,6 +610,139 @@ const BANK = [
 {s:"soc",u:"世界の諸地域",q:"南アメリカのアマゾン川流域に広がる森林は？",c:["熱帯雨林","タイガ","サバナ","ステップ"],e:"世界最大の熱帯雨林ですが、開発による森林破壊が問題になっています。"},
 {s:"soc",u:"世界の諸地域",q:"オーストラリアの先住民を何という？",c:["アボリジニ","マオリ","イヌイット","ネイティブアメリカン"],e:"マオリはニュージーランド、イヌイットはカナダなど北極圏の先住民です。"},
 {s:"soc",u:"世界の諸地域",q:"東南アジアの国々が加盟する地域協力の組織は？",c:["ASEAN","EU","NATO","OPEC"],e:"東南アジア諸国連合。経済や政治の協力を進めています。"},
+
+/* =====================================================================
+   追加問題（第4弾）— 中1 後期期末テスト対策。定期テストで出やすい計算・用語・文法を中心に。
+   英語は NEW HORIZON 1 後半の文法（現在進行形・感嘆文・過去形・過去進行形・There is/are）に対応。
+   計算問題は手計算・再計算・プログラムでの機械検算の3回以上で確認済み。末尾に追加すること。
+   ===================================================================== */
+/* ===== 数学・平面図形（第4弾） ===== */
+{s:"math",u:"平面図形",t:"input",q:"半径8cm・中心角45°のおうぎ形の弧の長さは何π cm？（πを除いた数字のみ）",ans:"2",e:"円周は2π×8＝16π。45/360＝1/8なので、16π×1/8＝2π cm。"},
+{s:"math",u:"平面図形",t:"input",q:"半径4cm・中心角90°のおうぎ形の面積は何π cm²？（πを除いた数字のみ）",ans:"4",e:"円の面積は16π。90/360＝1/4なので、16π×1/4＝4π cm²。"},
+{s:"math",u:"平面図形",t:"input",q:"半径10cm、弧の長さ6π cmのおうぎ形の面積は何π cm²？（πを除いた数字のみ）",ans:"30",e:"おうぎ形の面積＝1/2×弧の長さ×半径＝1/2×6π×10＝30π。（中心角は6π÷20π×360°＝108°、100π×108/360＝30πでも確かめられます）"},
+{s:"math",u:"平面図形",t:"input",q:"おうぎ形の面積が、同じ半径の円の面積の1/3になるのは、中心角が何度のとき？（数字のみ）",ans:"120",e:"360°×1/3＝120°。おうぎ形の面積や弧の長さは中心角に比例します。"},
+{s:"math",u:"平面図形",q:"直線ABと直線CDが垂直であることを、記号を使って表すと？",c:["AB⊥CD","AB∥CD","AB＝CD","AB≡CD"],e:"⊥は垂直、∥は平行を表す記号です。"},
+{s:"math",u:"平面図形",q:"円周上の2点を結ぶ線分を何という？",c:["弦","弧","半径","接線"],e:"円周の一部分は弧、円周上の2点を結ぶ線分は弦です。"},
+{s:"math",u:"平面図形",q:"図形を、ある直線を折り目として折り返すように移す移動を何という？",c:["対称移動","平行移動","回転移動","点対称移動"],e:"折り目にした直線を対称の軸といいます。"},
+{s:"math",u:"平面図形",q:"平行移動で、対応する2点を結んだ線分どうしはどうなる？",c:["平行で長さが等しい","垂直に交わる","1点で交わる","長さがばらばらになる"],e:"平行移動では、図形のすべての点が同じ方向に同じ距離だけ動きます。"},
+{s:"math",u:"平面図形",q:"円の中心から直線ℓまでの距離が、円の半径と等しいとき、直線ℓを円の何という？",c:["接線","弦","直径","弧"],e:"直線が円と1点だけで交わるとき、その直線を接線、その点を接点といいます。"},
+/* ===== 数学・空間図形（第4弾） ===== */
+{s:"math",u:"空間図形",t:"input",q:"1辺3cmの立方体の表面積は？（数字のみ、cm²）",ans:"54",e:"正方形の面が6つ。3×3×6＝54 cm²。"},
+{s:"math",u:"空間図形",t:"input",q:"縦2cm・横3cm・高さ4cmの直方体の表面積は？（数字のみ、cm²）",ans:"52",e:"(2×3＋3×4＋2×4)×2＝(6＋12＋8)×2＝52 cm²。"},
+{s:"math",u:"空間図形",t:"input",q:"底面の半径3cm、高さ5cmの円柱の側面積は何π cm²？（πを除いた数字のみ）",ans:"30",e:"側面は長方形で、横の長さは底面の円周2π×3＝6π。6π×5＝30π cm²。"},
+{s:"math",u:"空間図形",t:"input",q:"底面の半径3cm、高さ5cmの円柱の表面積は何π cm²？（πを除いた数字のみ）",ans:"48",e:"側面積30π＋底面積9π×2＝48π cm²。底面は2つあることに注意。"},
+{s:"math",u:"空間図形",t:"input",q:"半径6cmの球の表面積は何π cm²？（πを除いた数字のみ）",ans:"144",e:"球の表面積＝4πr²＝4×π×36＝144π cm²。"},
+{s:"math",u:"空間図形",t:"input",q:"底面が1辺6cmの正方形、高さ5cmの正四角錐の体積は？（数字のみ、cm³）",ans:"60",e:"(1/3)×底面積×高さ＝(1/3)×36×5＝60 cm³。"},
+{s:"math",u:"空間図形",q:"長方形を、その1辺を軸として1回転させてできる立体は？",c:["円柱","円錐","球","角柱"],e:"1回転させてできる立体を回転体といいます。直角三角形なら円錐、半円なら球。"},
+{s:"math",u:"空間図形",q:"直角三角形を、直角をはさむ1辺を軸として1回転させてできる立体は？",c:["円錐","円柱","球","三角錐"],e:"軸になった辺が円錐の高さになります。"},
+{s:"math",u:"空間図形",q:"投影図で、立面図が長方形、平面図が円である立体は？",c:["円柱","円錐","三角柱","球"],e:"正面から見ると長方形、真上から見ると円になるのは円柱です。"},
+{s:"math",u:"空間図形",q:"正八面体の頂点の数は？",c:["6","8","12","4"],e:"正八面体は面8・辺12・頂点6。"},
+{s:"math",u:"空間図形",q:"空間で、直線ℓと平面Pが交わらないとき、ℓとPの位置関係は？",c:["平行","垂直","ねじれの位置","一致"],e:"「ねじれの位置」は2直線の関係にだけ使う言葉です。"},
+/* ===== 数学・データの活用（第4弾） ===== */
+{s:"math",u:"データの活用",t:"input",q:"ある階級の度数が6、度数の合計が30のとき、その階級の相対度数は？（小数で）",ans:"0.2",e:"相対度数＝その階級の度数÷度数の合計＝6÷30＝0.2。"},
+{s:"math",u:"データの活用",q:"最初の階級から、ある階級までの度数をたし合わせたものを何という？",c:["累積度数","相対度数","度数の合計","階級値"],e:"累積度数を全体で割ったものは累積相対度数です。"},
+{s:"math",u:"データの活用",t:"input",q:"階級が「140cm以上145cm未満」のとき、階級値は何cm？（数字のみ）",ans:"142.5",e:"階級値は階級の真ん中の値。(140＋145)÷2＝142.5cm。"},
+{s:"math",u:"データの活用",t:"input",q:"データ 5, 7, 7, 8, 10, 12, 14 の中央値は？（数字のみ）",ans:"8",e:"データは7個なので、小さい順に4番目の8が中央値です。"},
+{s:"math",u:"データの活用",t:"input",q:"データ 2, 3, 3, 6, 6, 6, 9 の平均値は？（数字のみ）",ans:"5",e:"合計は35。35÷7＝5。"},
+{s:"math",u:"データの活用",q:"度数分布表から最頻値を求めるとき、最頻値とするのは？",c:["度数がいちばん多い階級の階級値","いちばん大きい階級の階級値","度数の合計","累積度数がいちばん大きい階級の階級値"],e:"度数分布表では、度数が最も多い階級の階級値を最頻値とします。"},
+{s:"math",u:"データの活用",t:"input",q:"ペットボトルのキャップを1000回投げたら、表向きが420回だった。表向きになる確率はおよそいくつ？（小数で）",ans:"0.42",e:"多数回の実験の相対度数を確率と考えます。420÷1000＝0.42。"},
+{s:"math",u:"データの活用",q:"累積相対度数は、最後の階級で必ずいくつになる？",c:["1","0","100","度数の合計と同じ"],e:"すべての相対度数をたすと1（100%）になるからです。"},
+/* ===== 英語・現在進行形（第4弾） ===== */
+{s:"eng",u:"現在進行形",t:"input",q:"make の ing形は？（アルファベットで）",ans:"making",e:"eで終わる動詞はeをとってing。make→making。"},
+{s:"eng",u:"現在進行形",q:"What is Ken doing? — He ___ his room.",c:["is cleaning","cleans","clean","cleaned"],e:"「今何をしているか」には現在進行形で答えます。"},
+{s:"eng",u:"現在進行形",t:"input",q:"「彼らは今テレビを見ていません」＝ They ___ watching TV now.（2語、アルファベットで）",ans:"are not",accept:["aren't"],e:"現在進行形の否定文はbe動詞のあとにnot。are not（aren't）。"},
+/* ===== 英語・感嘆文（新単元） ===== */
+{s:"eng",u:"感嘆文",q:"___ a beautiful flower!（なんて美しい花でしょう）",c:["What","How","Who","Which"],e:"〈What＋a[an]＋形容詞＋名詞！〉の形。名詞があるときはWhat。"},
+{s:"eng",u:"感嘆文",q:"___ cute!（なんてかわいいのでしょう）",c:["How","What","Who","When"],e:"〈How＋形容詞[副詞]！〉の形。名詞がないときはHow。"},
+{s:"eng",u:"感嘆文",q:"What ___ interesting book!",c:["an","a","the","is"],e:"interestingは母音で始まるのでan。What an interesting book!"},
+{s:"eng",u:"感嘆文",t:"input",q:"「なんて大きいのでしょう！」＝ ___ big!（1語、アルファベットで）",ans:"how",e:"形容詞だけのときは How ＋形容詞！ の形です。"},
+/* ===== 英語・過去形（第4弾） ===== */
+{s:"eng",u:"過去形",t:"input",q:"buy の過去形は？（アルファベットで）",ans:"bought",e:"buyは不規則動詞。buy−bought−bought。"},
+{s:"eng",u:"過去形",t:"input",q:"stop の過去形は？（アルファベットで）",ans:"stopped",e:"〈短母音＋子音字〉で終わる動詞は、最後の文字を重ねてed。"},
+{s:"eng",u:"過去形",q:"I ___ to the library yesterday, but I didn't read any books.",c:["went","go","goes","going"],e:"yesterdayがあるので過去形。go→went。"},
+{s:"eng",u:"過去形",q:"Were you at home last Sunday? — No, I ___.",c:["wasn't","weren't","didn't","am not"],e:"Were you 〜? には I was / I wasn't で答えます。"},
+{s:"eng",u:"過去形",t:"input",q:"「私は昨日テニスをしませんでした」＝ I ___ play tennis yesterday.（1語、アルファベットで）",ans:"didn't",accept:["did not"],e:"一般動詞の過去の否定文は didn't（did not）＋動詞の原形。"},
+{s:"eng",u:"過去形",q:"When did you visit Kyoto? — I ___ it last year.",c:["visited","visit","visits","was visit"],e:"答えの文は一般動詞の過去形。visit→visited。"},
+/* ===== 英語・過去進行形（新単元） ===== */
+{s:"eng",u:"過去進行形",q:"I ___ reading a book at nine last night.",c:["was","were","am","did"],e:"過去進行形は〈was / were＋動詞のing形〉。主語Iならwas。"},
+{s:"eng",u:"過去進行形",q:"They ___ playing soccer then.",c:["were","was","are","did"],e:"then（そのとき）は過去。主語theyなのでwere。"},
+{s:"eng",u:"過去進行形",q:"What were you doing at that time? — I ___ my homework.",c:["was doing","were doing","am doing","do"],e:"過去進行形でたずねられたら過去進行形で答えます。主語Iなのでwas doing。"},
+{s:"eng",u:"過去進行形",q:"過去進行形の形として正しいものは？",c:["was / were＋動詞のing形","did＋動詞のing形","be動詞の現在形＋動詞の原形","was / were＋動詞の原形"],e:"「（そのとき）〜していた」は〈was / were＋〜ing〉。"},
+{s:"eng",u:"過去進行形",t:"input",q:"「彼女はそのとき料理をしていました」＝ She was ___ then.（1語、アルファベットで）",ans:"cooking",e:"was のあとは動詞のing形。cook→cooking。"},
+/* ===== 英語・There is / are（新単元） ===== */
+{s:"eng",u:"There is / are",q:"There ___ a cat under the table.",c:["is","are","am","be"],e:"There is / are のあとの名詞が単数ならis、複数ならare。a cat は単数。"},
+{s:"eng",u:"There is / are",q:"There ___ three books on the desk.",c:["are","is","am","be"],e:"three books は複数なのでare。"},
+{s:"eng",u:"There is / are",q:"___ there any milk in the fridge? — Yes, there is.",c:["Is","Are","Do","Does"],e:"疑問文はbe動詞をthereの前に。milkは数えられない名詞なのでis。"},
+{s:"eng",u:"There is / are",t:"input",q:"「公園に子どもが何人かいました」＝ There ___ some children in the park.（1語、アルファベットで）",ans:"were",e:"過去で、childrenは複数なのでwere。"},
+{s:"eng",u:"There is / are",q:"Is there a station near here? — No, ___.",c:["there isn't","it isn't","there aren't","I'm not"],e:"Is there 〜? には there is / there isn't で答えます。"},
+/* ===== 国語・古典（第4弾：竹取物語・故事成語） ===== */
+{s:"jpn",u:"古典",q:"「竹取物語」で、くらもちの皇子がかぐや姫から持ってくるように言われたものは？",c:["蓬萊の玉の枝","仏の御石の鉢","火鼠の皮衣","燕の子安貝"],e:"くらもちの皇子は、にせものの玉の枝を作らせてかぐや姫をだまそうとしました。"},
+{s:"jpn",u:"古典",q:"古語「いと」の意味は？",c:["とても","糸","いやだ","少し"],e:"「いとうつくしうてゐたり」＝とてもかわいらしい様子ですわっていた。"},
+{s:"jpn",u:"古典",q:"古語「うつくし」の意味は？",c:["かわいらしい","強い","うれしい","悲しい"],e:"古語の「うつくし」は、小さいものをかわいらしく思う気持ちを表します。"},
+{s:"jpn",u:"古典",q:"「あやしがりて寄りて見るに」の「あやしがりて」の意味は？",c:["不思議に思って","楽しく思って","きれいだと思って","うるさく思って"],e:"古語の「あやし」は「不思議だ」という意味です。"},
+{s:"jpn",u:"古典",t:"input",q:"歴史的仮名遣いの「よろづ」を現代仮名遣いに直すと？（ひらがなで）",ans:"よろず",e:"「づ」は「ず」に直します。よろづ→よろず（いろいろ、の意味）。"},
+{s:"jpn",u:"古典",t:"input",q:"歴史的仮名遣いの「なほ」を現代仮名遣いに直すと？（ひらがなで）",ans:"なお",e:"語頭以外の「ほ」は「お」と読みます。なほ→なお。"},
+{s:"jpn",u:"古典",q:"故事成語「蛇足」の意味は？",c:["よけいなつけ足し","とても速いこと","ずるがしこいこと","長くて役に立つもの"],e:"蛇の絵をいちばんに描きあげた人が、足まで描き足して負けた話が由来です。"},
+{s:"jpn",u:"古典",q:"故事成語「五十歩百歩」の意味は？",c:["少しのちがいはあっても、たいした差はない","五十歩先を行く人の方がえらい","努力すれば百歩も進める","歩くことは健康によい"],e:"戦場で五十歩にげた者が、百歩にげた者を笑った話が由来です。"},
+{s:"jpn",u:"古典",q:"故事成語「漁夫の利」の意味は？",c:["二者が争っているすきに、第三者が利益を横取りすること","漁師はもうかる仕事だということ","苦労して利益を得ること","ひとりじめはよくないということ"],e:"シギとハマグリが争っている間に、漁師が両方とも捕まえた話が由来です。"},
+{s:"jpn",u:"古典",q:"故事成語「推敲」の意味は？",c:["文章を何度も練り直すこと","他人の意見を推し量ること","重い荷物を押すこと","大切な人を推薦すること"],e:"詩の一字を「推す」にするか「敲く」にするか迷った話が由来です。"},
+/* ===== 国語・文法（第4弾：単語の類別） ===== */
+{s:"jpn",u:"文法",q:"単語のうち、それだけで文節をつくることができるものを何という？",c:["自立語","付属語","活用語","修飾語"],e:"自立語は単独で文節をつくれます。助詞・助動詞は付属語で、自立語のあとについて文節をつくります。"},
+{s:"jpn",u:"文法",q:"付属語のうち、活用するものは？",c:["助動詞","助詞","接続詞","感動詞"],e:"付属語は助詞（活用しない）と助動詞（活用する）の2つです。"},
+{s:"jpn",u:"文法",q:"「たぶん雨が降るだろう」の「たぶん」の品詞は？",c:["副詞","連体詞","形容詞","接続詞"],e:"「たぶん〜だろう」のように、あとに決まった言い方がくる副詞（呼応の副詞）です。"},
+{s:"jpn",u:"文法",q:"「富士山」「名古屋」のように、特定のものの名前を表す名詞を何という？",c:["固有名詞","普通名詞","代名詞","数詞"],e:"ものごとの一般的な名前は普通名詞、特定のものの名前は固有名詞です。"},
+{s:"jpn",u:"文法",q:"「用言」にあたる品詞の組み合わせは？",c:["動詞・形容詞・形容動詞","名詞・代名詞・数詞","副詞・連体詞・接続詞","助詞・助動詞・感動詞"],e:"用言は自立語で活用があり、単独で述語になれる3つの品詞です。"},
+{s:"jpn",u:"文法",q:"「春の海はおだやかだ」を文節に分けると、いくつ？",c:["3つ","2つ","4つ","5つ"],e:"春の／海は／おだやかだ の3つ。「おだやかだ」は1語の形容動詞です。"},
+{s:"jpn",u:"文法",t:"input",q:"「小さな花が咲いた」を単語に分けると、いくつ？（数字のみ）",ans:"5",e:"小さな／花／が／咲い／た の5つ。「小さな」は連体詞、「た」は助動詞です。"},
+/* ===== 国語・語彙とことわざ（第4弾：熟語の構成） ===== */
+{s:"jpn",u:"語彙とことわざ",q:"「登山（山に登る）」と同じ組み立ての熟語は？",c:["読書","高低","岩石","強風"],e:"下の字が上の字の目的・対象を表す組み立て（〜を〜する）。読書＝書を読む。"},
+{s:"jpn",u:"語彙とことわざ",q:"「温暖」と同じく、似た意味の漢字を組み合わせた熟語は？",c:["岩石","明暗","開会","国立"],e:"温暖・岩石は似た意味の組み合わせ。明暗は反対の意味、開会は〜を〜する、国立は主語と述語の関係。"},
+{s:"jpn",u:"語彙とことわざ",q:"「国立（国が立てる）」の熟語の組み立ては？",c:["上が主語、下が述語の関係","反対の意味の組み合わせ","似た意味の組み合わせ","下の字が上の字の目的・対象"],e:"「国が立てる」のように、上の字が主語、下の字が述語になっています。（日没・県営なども同じ）"},
+/* ===== 理科・光・音・力（第4弾） ===== */
+{s:"sci",u:"光・音・力",q:"物体を凸レンズの焦点より内側に置き、レンズを通して見たときに見える像を何という？",c:["虚像","実像","倒立の実像","像はできない"],e:"物体と同じ向きで、物体より大きな虚像が見えます（虫めがねのしくみ）。スクリーンにはうつりません。"},
+{s:"sci",u:"光・音・力",q:"物体を凸レンズの焦点距離の2倍の位置に置くと、スクリーンにできる実像の大きさは？",c:["物体と同じ大きさ","物体より大きい","物体より小さい","像はできない"],e:"焦点距離の2倍の位置に、物体と同じ大きさの上下左右が逆の実像ができます。"},
+{s:"sci",u:"光・音・力",q:"光が空気中から水中へななめに進むとき、入射角と屈折角の関係は？",c:["屈折角は入射角より小さい","屈折角は入射角より大きい","等しい","屈折しない"],e:"空気→水（ガラス）では屈折角＜入射角。水→空気では屈折角＞入射角になります。"},
+{s:"sci",u:"光・音・力",t:"input",q:"ある音さが0.5秒間に220回振動した。この音の振動数は何Hz？（数字のみ）",ans:"440",e:"振動数は1秒間の振動の回数。220÷0.5＝440Hz。"},
+{s:"sci",u:"光・音・力",t:"input",q:"あるばねに20gのおもりをつるすと2cmのびた。同じばねに60gのおもりをつるすと何cmのびる？（数字のみ）",ans:"6",e:"フックの法則より、のびは力の大きさに比例。60gは20gの3倍なので2×3＝6cm。"},
+{s:"sci",u:"光・音・力",q:"力の3つの要素は「力の大きさ」「力の向き」と、あと1つは？",c:["作用点","質量","速さ","重力"],e:"力は矢印で表し、矢印の始点が作用点、向きが力の向き、長さが力の大きさです。"},
+{s:"sci",u:"光・音・力",q:"月面上での物体の質量と重さについて正しいものは？",c:["質量は変わらず、重さは約1/6になる","質量も重さも約1/6になる","質量は約1/6、重さは変わらない","どちらも変わらない"],e:"質量（g）は場所によって変わらない物質そのものの量。重さ（N）は重力の大きさなので、月では約1/6になります。"},
+/* ===== 理科・大地の変化（第4弾） ===== */
+{s:"sci",u:"大地の変化",t:"input",q:"ある地点で、P波が10時0分5秒、S波が10時0分13秒に届いた。初期微動継続時間は何秒？（数字のみ）",ans:"8",e:"初期微動継続時間＝S波の到着時刻−P波の到着時刻＝13−5＝8秒。"},
+{s:"sci",u:"大地の変化",t:"input",q:"P波の速さを7km/s、S波の速さを3.5km/sとする。震源から70km離れた地点の初期微動継続時間は何秒？（数字のみ）",ans:"10",e:"P波は70÷7＝10秒後、S波は70÷3.5＝20秒後に届くので、20−10＝10秒。"},
+{s:"sci",u:"大地の変化",q:"震源からの距離が遠い地点ほど、初期微動継続時間はどうなる？",c:["長くなる","短くなる","変わらない","0になる"],e:"P波とS波の到着時刻の差は、震源からの距離に比例して大きくなります。"},
+{s:"sci",u:"大地の変化",q:"火山岩のうち、白っぽい色をしたものは？",c:["流紋岩","玄武岩","安山岩","斑れい岩"],e:"火山岩は白っぽい順に流紋岩→安山岩→玄武岩。斑れい岩は深成岩です。"},
+{s:"sci",u:"大地の変化",q:"深成岩のうち、黒っぽい色をしたものは？",c:["斑れい岩","花こう岩","せん緑岩","流紋岩"],e:"深成岩は白っぽい順に花こう岩→せん緑岩→斑れい岩。"},
+{s:"sci",u:"大地の変化",q:"次の鉱物のうち、無色鉱物はどれ？",c:["セキエイ","クロウンモ","カクセン石","カンラン石"],e:"無色鉱物はセキエイとチョウ石。ほかは有色鉱物です。"},
+{s:"sci",u:"大地の変化",q:"地層ができた当時の環境を知る手がかりになる化石を何という？",c:["示相化石","示準化石","生きている化石","化石燃料"],e:"示相化石の例：サンゴ（あたたかくて浅い海）、シジミ（湖や河口）。"},
+{s:"sci",u:"大地の変化",q:"サンゴの化石が見つかった地層は、できた当時どのような環境だったと考えられる？",c:["あたたかくて浅い海","冷たくて深い海","湖や河口","寒冷な陸地"],e:"サンゴはあたたかく浅いきれいな海に生息するので、示相化石になります。"},
+{s:"sci",u:"大地の変化",q:"日本付近で起こる海溝型の地震は、主にどのようにして起こる？",c:["海洋プレートが大陸プレートの下にしずみこみ、引きずられた大陸プレートがはね上がって起こる","大陸プレートが海洋プレートの下にしずみこんで起こる","月の引力で地面が引っぱられて起こる","火山の噴火によってだけ起こる"],e:"太平洋プレートなどの海洋プレートが日本列島の下にしずみこみ、ひずみが限界に達すると地震が起こります。"},
+{s:"sci",u:"大地の変化",q:"地層の逆転などがない場合、ふつう、地層は下の層ほどどうなっている？",c:["古い","新しい","粒が小さい","やわらかい"],e:"地層は下から順に積み重なるので、下の層ほど古くなります。"},
+{s:"sci",u:"大地の変化",q:"離れた地域の地層を比べるときの手がかりになる、火山灰の層などを何という？",c:["かぎ層","断層","しゅう曲","不整合"],e:"火山灰は広い範囲に同時に降り積もるので、地層の比較の目印（かぎ層）になります。"},
+/* ===== 社会・世界の諸地域（第4弾） ===== */
+{s:"soc",u:"世界の諸地域",q:"ヨーロッパの西部が高緯度のわりに温暖なのは、暖流の北大西洋海流と何の影響による？",c:["偏西風","季節風","貿易風","やませ"],e:"北大西洋海流の上をわたってくる偏西風が、あたたかい空気を運んできます（西岸海洋性気候）。"},
+{s:"soc",u:"世界の諸地域",q:"夏に乾燥し冬に雨が多い気候を生かして、オリーブやぶどうなどを栽培する農業は？",c:["地中海式農業","混合農業","酪農","焼畑農業"],e:"地中海沿岸で行われ、夏はオリーブ・ぶどう、冬は小麦などを栽培します。"},
+{s:"soc",u:"世界の諸地域",q:"小麦などの穀物の栽培と、豚や牛などの家畜の飼育を組み合わせた農業は？",c:["混合農業","地中海式農業","遊牧","企業的農業"],e:"フランスやドイツなどヨーロッパ中部で広く行われています。"},
+{s:"soc",u:"世界の諸地域",q:"EUの多くの加盟国で使われている共通通貨は？",c:["ユーロ","ドル","ポンド","ルーブル"],e:"共通通貨ユーロで、国境をこえた買い物や旅行が便利になりました。"},
+{s:"soc",u:"世界の諸地域",q:"アメリカ合衆国で、その土地の気候や土壌に合った農作物を栽培することを何という？",c:["適地適作","二毛作","輪作","焼畑農業"],e:"小麦地帯・とうもろこし地帯・綿花地帯などが分布しています。"},
+{s:"soc",u:"世界の諸地域",q:"アメリカ合衆国に移り住んだ、メキシコや中南米などからのスペイン語を話す人々を何という？",c:["ヒスパニック","アボリジニ","イヌイット","メスチソ"],e:"ヒスパニックは農業や建設業などで重要な働き手になっています。メスチソは先住民と白人の混血の人々です。"},
+{s:"soc",u:"世界の諸地域",q:"アメリカ合衆国の北緯37度付近より南の、先端技術産業などが発達した地域を何という？",c:["サンベルト","プレーリー","グレートプレーンズ","五大湖周辺"],e:"温暖で土地が安く、労働力も豊富なため、工業が発展しました。"},
+{s:"soc",u:"世界の諸地域",q:"ブラジルの公用語は？",c:["ポルトガル語","スペイン語","英語","フランス語"],e:"ブラジルはポルトガルの植民地だったため。南アメリカのほかの多くの国はスペイン語です。"},
+{s:"soc",u:"世界の諸地域",q:"ブラジルで、さとうきびなどを原料につくられ、自動車の燃料などに使われるものは？",c:["バイオエタノール","石油","天然ガス","石炭"],e:"植物を原料とするバイオ燃料の一つです。"},
+{s:"soc",u:"世界の諸地域",q:"南アメリカ大陸の西部を南北に走る山脈は？",c:["アンデス山脈","ロッキー山脈","アルプス山脈","ヒマラヤ山脈"],e:"アンデス山脈の高地では、リャマやアルパカの放牧やじゃがいもの栽培が行われています。"},
+{s:"soc",u:"世界の諸地域",q:"オーストラリアがかつてとっていた、ヨーロッパ系以外の移民を制限する政策は？",c:["白豪主義","多文化主義","アパルトヘイト","一人っ子政策"],e:"1970年代に廃止され、現在はさまざまな文化を認め合う多文化社会を目指しています。"},
+{s:"soc",u:"世界の諸地域",q:"アフリカで、カカオ（チョコレートの原料）の生産がとくに多い国は？",c:["コートジボワール","エジプト","南アフリカ共和国","ケニア"],e:"ギニア湾岸のコートジボワールやガーナで多く生産されています。"},
+{s:"soc",u:"世界の諸地域",q:"アフリカの国境線に直線的なものが多いのはなぜ？",c:["植民地時代に、ヨーロッパの国々が緯線や経線をもとに境界を決めたから","砂漠が直線的に広がっているから","川が直線的に流れているから","最近になって国連が決めたから"],e:"民族の分布と関係なく境界が引かれたため、独立後に紛争の原因になったところもあります。"},
+{s:"soc",u:"世界の諸地域",q:"オーストラリア北西部などで、露天掘りによって大量に産出される鉱産資源は？",c:["鉄鉱石","石油","ダイヤモンド","天然ガス"],e:"鉄鉱石は北西部、石炭は東部で多く産出され、日本へもたくさん輸出されています。"},
+/* ===== 社会・歴史（古代／平安〜鎌倉）（第4弾） ===== */
+{s:"soc",u:"歴史・古代",q:"奈良時代、聖武天皇のころに栄えた、唐の影響を強く受けた国際色豊かな文化は？",c:["天平文化","国風文化","飛鳥文化","元禄文化"],e:"東大寺の正倉院には、シルクロードを通って伝わった宝物が納められています。"},
+{s:"soc",u:"歴史・平安〜鎌倉",q:"797年に征夷大将軍に任命され、東北地方の蝦夷と戦った人物は？",c:["坂上田村麻呂","源頼朝","平将門","藤原純友"],e:"桓武天皇の命令で東北地方に派遣されました。"},
+{s:"soc",u:"歴史・平安〜鎌倉",q:"平安時代、娘を天皇のきさきにし、摂政や関白として政治の実権をにぎったのは何氏？",c:["藤原氏","平氏","源氏","蘇我氏"],e:"この政治を摂関政治といい、藤原道長・頼通の父子のころに最も栄えました。"},
+{s:"soc",u:"歴史・平安〜鎌倉",q:"1086年に白河上皇が始めた、位をゆずった上皇が中心となって行う政治は？",c:["院政","摂関政治","執権政治","律令政治"],e:"上皇の住まいを院とよんだことから院政といいます。"},
+{s:"soc",u:"歴史・平安〜鎌倉",q:"平安時代の国風文化のころ、漢字をもとにしてつくられた日本独自の文字は？",c:["かな文字","漢字","ローマ字","くさび形文字"],e:"かな文字の発達で、日本人の感情を表現しやすくなり、女性による文学が栄えました。"},
+{s:"soc",u:"歴史・平安〜鎌倉",q:"平安時代、阿弥陀仏にすがり、死後に極楽浄土へ生まれ変わることを願う信仰は？",c:["浄土信仰","禅宗","儒教","キリスト教"],e:"社会の不安が高まる中で、貴族や都の人々の間に広まりました。"},
+{s:"soc",u:"歴史・平安〜鎌倉",q:"藤原頼通が宇治に建てた、浄土信仰を代表する建物は？",c:["平等院鳳凰堂","中尊寺金色堂","東大寺","法隆寺"],e:"中尊寺金色堂も浄土信仰の建物ですが、東北の奥州藤原氏が建てたものです。"},
+{s:"soc",u:"歴史・平安〜鎌倉",q:"平安時代のはじめに最澄が開いた仏教の宗派は？",c:["天台宗","真言宗","浄土宗","臨済宗"],e:"最澄は比叡山に延暦寺を建てて天台宗を開きました。"},
+{s:"soc",u:"歴史・平安〜鎌倉",q:"空海が開き、高野山に金剛峯寺を建てた宗派は？",c:["真言宗","天台宗","浄土真宗","日蓮宗"],e:"最澄（天台宗）と空海（真言宗）はセットで覚えましょう。"},
 ];
 
 /* ============ 学習進度（中1・前期後期制の標準カリキュラム連動） ============ */
@@ -620,7 +753,8 @@ const CURRICULUM = {
   "math|正負の数":1, "math|文字と式":3, "math|一次方程式":6, "math|比例と反比例":7,
   "math|平面図形":9, "math|空間図形":10, "math|データの活用":11,
   "eng|be動詞":1, "eng|一般動詞（基本）":2, "eng|疑問詞":3, "eng|命令文とcan":4,
-  "eng|名詞と代名詞":6, "eng|三単現（3人称単数）":7, "eng|現在進行形":9, "eng|過去形":10,
+  "eng|名詞と代名詞":6, "eng|三単現（3人称単数）":7, "eng|現在進行形":9, "eng|感嘆文":9, "eng|過去形":10,
+  "eng|過去進行形":11, "eng|There is / are":11,
   "jpn|漢字の読み":1, "jpn|漢字の書き":1, "jpn|文法":2, "jpn|語彙とことわざ":1, "jpn|古典":9,
   "sci|植物の世界":1, "sci|動物の分類":3, "sci|身のまわりの物質":6, "sci|光・音・力":9, "sci|大地の変化":11,
   "soc|世界の姿":1, "soc|世界の気候と暮らし":3, "soc|歴史・古代":6, "soc|世界の諸地域":7, "soc|歴史・平安〜鎌倉":9,
@@ -865,6 +999,10 @@ if(typeof S.tickets !== "number") S.tickets = 0;
 if(!S.arcade) S.arcade = {owned:{}, pulls:0};
 if(!S.arcade.owned) S.arcade.owned = {};
 if(typeof S.arcade.pulls !== "number") S.arcade.pulls = 0;
+if(!S.exam) S.exam = {attempts:0, best:{}, history:[]};
+if(typeof S.exam.attempts !== "number") S.exam.attempts = 0;
+if(!S.exam.best) S.exam.best = {};
+if(!Array.isArray(S.exam.history)) S.exam.history = [];
 
 /* ============ 手持ちモンスター（ポケモン風バトル）============
    最大3体。レベルはXPから逆算（保存はxpのみ）、個体値(iv)はなかまにした瞬間に1回だけ振られる
@@ -1137,6 +1275,9 @@ const BADGES = [
   {id:"awaken3",   emoji:"✨", name:"覚醒の極意",     desc:"1体のモンスターを3回覚醒させる",               check:()=>S.team.members.some(t=>(t.awakening||0)>=3)},
   {id:"box1",      emoji:"📦", name:"ボックスデビュー", desc:"モンスターボックスにはじめてモンスターをあずける", check:()=>S.box.stored>=1},
   {id:"boxExpand5",emoji:"📐", name:"収納の達人",     desc:"モンスターボックスを5回拡張する",               check:()=>S.box.expansions>=5},
+  {id:"exam1",     emoji:"📝", name:"テスト対策デビュー", desc:"期末対策の模擬テストをはじめて最後まで解く",     check:()=>S.exam.attempts>=1},
+  {id:"exam90",    emoji:"🎓", name:"期末テスト90点", desc:"5教科模擬テストで90点以上をとる",               check:()=>(S.exam.best.all||0)>=90},
+  {id:"exam100",   emoji:"💯", name:"満点合格",       desc:"期末対策の模擬テストで100点をとる",             check:()=>Object.values(S.exam.best).some(v=>v>=100)},
 ];
 function checkNewBadges(){
   const got = BADGES.filter(b=>!S.badges.includes(b.id) && b.check());
@@ -1295,6 +1436,7 @@ function renderHome(){
       </div>
       <button class="btn-main" onclick="startQuest()">▶ 今日のクエストに出発（${QUEST_SIZE}問）</button>
       <button class="btn-sub" onclick="go('battle')">⚔️ まなびバトルで腕だめし${S.battle.stage<MONSTERS.length?`（つぎの相手：${MONSTERS[S.battle.stage].emoji} ${MONSTERS[S.battle.stage].name}）`:"（全モンスター制覇！）"}</button>
+      <button class="btn-sub" onclick="openExam()">📝 後期期末テスト対策（模擬テスト${S.exam.best.all!==undefined?`・ベスト${S.exam.best.all}点`:""}）</button>
       <button class="btn-sub" onclick="go('arcade')">🎮 まなびゲーセン（🎫 ${S.tickets}チケット）</button>
       <div class="sub center" style="margin-top:8px">復習${Math.min(due,QUEST_SIZE)}問 ＋ 新しい問題${Math.max(0,Math.min(QUEST_SIZE-due, fresh))}問を教科ミックスで出題<br>📚 中1・${termName()}（〜${monthLabel(schoolMonth())}）に習う単元から。未習単元は「特訓」で先取りできます</div>
     </div>
@@ -1311,12 +1453,14 @@ window.toggleSound = ()=>{ S.sound=!S.sound; save(); renderHome(); };
 let trainSection = "unit";
 window.setTrainSection = (sec)=>{ trainSection = sec; renderTrain(); };
 function renderTrain(){
-  dojo = null;
+  dojo = null; exam = null;
   const segRow = `<div class="segrow">
-    <button class="segbtn ${trainSection==="unit"?"active":""}" onclick="setTrainSection('unit')">📚 単元べつ特訓</button>
-    <button class="segbtn ${trainSection==="dojo"?"active":""}" onclick="setTrainSection('dojo')">🧘 修行の部屋</button>
+    <button class="segbtn ${trainSection==="unit"?"active":""}" onclick="setTrainSection('unit')">📚 単元べつ</button>
+    <button class="segbtn ${trainSection==="dojo"?"active":""}" onclick="setTrainSection('dojo')">🧘 修行</button>
+    <button class="segbtn ${trainSection==="exam"?"active":""}" onclick="setTrainSection('exam')">📝 期末対策</button>
   </div>`;
   if(trainSection==="dojo"){ renderDojoHome(segRow); return; }
+  if(trainSection==="exam"){ renderExamHome(segRow); return; }
 
   const units = {};
   BANK.forEach((q,i)=>{
@@ -1360,6 +1504,194 @@ window.startPractice = (s,u)=>{
   });
   startSession(shuffle(ids.slice(0,PRACTICE_SIZE)), `${SUBJECTS[s].name}・${u} 特訓`);
 };
+
+/* ---- 期末テスト対策（後期期末の範囲から出題する模擬テスト） ----
+   本番と同じように答え合わせは最後にまとめて行い、100点満点で採点する。
+   範囲は一般的な中1後期期末（2月ごろ）の目安。まだ習っていない単元も含めて出題する。 */
+const EXAM = {
+  title: "中1 後期期末テスト",
+  note: "一般的な後期期末（2月ごろ）の出題範囲の目安です。英語はNEW HORIZON 1 の後半の文法に合わせています。学校のテスト範囲表とちがうところは「単元べつ」で補ってね。",
+  units: {
+    math:["平面図形","空間図形","データの活用"],
+    eng:["現在進行形","感嘆文","過去形","過去進行形","There is / are"],
+    jpn:["古典","文法","語彙とことわざ","漢字の読み","漢字の書き"],
+    sci:["光・音・力","大地の変化"],
+    soc:["世界の諸地域","歴史・古代","歴史・平安〜鎌倉"],
+  },
+};
+const EXAM_ALL_PER_SUBJECT = 5, EXAM_SUBJECT_SIZE = 10;
+let examLastWrong = [];
+function examPool(s){ return BANK.map((_,i)=>i).filter(i=>BANK[i].s===s && EXAM.units[s].includes(BANK[i].u)); }
+/* 単元が偏らないよう単元ごとに順番に取り出す。各単元の中では、まだ解いていない問題・定着していない問題を優先する */
+function pickExamIds(s, n){
+  const byUnit = {};
+  examPool(s).forEach(i=>{ (byUnit[BANK[i].u]=byUnit[BANK[i].u]||[]).push(i); });
+  const stageOf = i => S.items[i] ? S.items[i].stage : -1;
+  const lists = shuffle(Object.values(byUnit)).map(l=>shuffle(l).sort((a,b)=>stageOf(a)-stageOf(b)));
+  const out = [];
+  for(let k=0; out.length<n && lists.some(l=>l.length); k++){
+    const l = lists[k % lists.length];
+    if(l.length) out.push(l.shift());
+  }
+  return out;
+}
+function examKindName(kind){ return kind==="all" ? "5教科模擬テスト" : SUBJECTS[kind].name+"の模擬テスト"; }
+window.openExam = ()=>{ trainSection = "exam"; go("train"); };
+
+function renderExamHome(segRow){
+  const E = S.exam;
+  const bestTxt = k => E.best[k]!==undefined ? `ベスト ${E.best[k]}点` : "未挑戦";
+  const subjCards = Object.entries(EXAM.units).map(([s,units])=>{
+    const sub = SUBJECTS[s];
+    const pool = examPool(s);
+    const mastered = pool.filter(i=>S.items[i]&&S.items[i].stage>=MASTER_STAGE).length;
+    const seen = pool.filter(i=>S.items[i]).length;
+    return `<div class="card">
+      <div class="row"><h2 style="margin:0">${sub.emoji} ${sub.name}</h2><div class="grow"></div><span class="sub">${bestTxt(s)}</span></div>
+      <div class="sub" style="margin:6px 0 8px">範囲：${units.map(esc).join("・")}</div>
+      <div class="masterybar"><div style="width:${pool.length?Math.round(seen/pool.length*100):0}%;background:${sub.color}"></div></div>
+      <div class="sub" style="margin-top:4px">解いた問題 ${seen}/${pool.length}問｜マスター ${mastered}問</div>
+      <button class="btn-sub" onclick="startExam('${s}')">▶ ${sub.name}だけ（${EXAM_SUBJECT_SIZE}問）</button>
+    </div>`;
+  }).join("");
+  const hist = E.history.slice(0,5).map(h=>`<div class="sub">${esc(h.date)}　${esc(examKindName(h.kind))}　<b>${h.score}点</b></div>`).join("");
+  app.innerHTML = `<h1 style="margin-bottom:12px">💪 特訓</h1>` + segRow + `
+    <div class="card">
+      <h2>📝 ${EXAM.title} 対策</h2>
+      <div class="sub" style="line-height:1.7;margin-bottom:10px">${EXAM.note}<br>本番と同じように、答え合わせは最後にまとめて行います。100点満点で採点し、まちがえた問題は解説つきで解き直せます。</div>
+      <button class="btn-main" onclick="startExam('all')">📝 5教科模擬テスト（${EXAM_ALL_PER_SUBJECT*5}問・100点満点）</button>
+      <div class="sub center" style="margin-top:6px">${bestTxt("all")}｜これまで${E.attempts}回挑戦</div>
+      ${hist?`<div style="margin-top:10px">${hist}</div>`:""}
+    </div>
+    ${subjCards}`;
+}
+
+window.startExam = (kind)=>{
+  const ids = kind==="all"
+    ? interleave(Object.keys(EXAM.units).flatMap(s=>pickExamIds(s, EXAM_ALL_PER_SUBJECT)))
+    : shuffle(pickExamIds(kind, EXAM_SUBJECT_SIZE));
+  if(!ids.length) return;
+  exam = {kind, ids, i:0, answers:[], gainedXp:0, gainedTickets:0, currentType:null, currentOrder:null};
+  renderExamQuestion();
+};
+function renderExamQuestion(){
+  const id = exam.ids[exam.i];
+  const q = BANK[id];
+  const sub = SUBJECTS[q.s];
+  const isInput = q.t === "input";
+  exam.currentType = isInput ? "input" : "choice";
+  exam.currentOrder = isInput ? null : shuffle([0,1,2,3]);
+  const pct = Math.round(exam.i / exam.ids.length * 100);
+  app.innerHTML = `
+    <div class="row">
+      <button class="btn-ghost" onclick="quitExam()">✕ やめる</button>
+      <div class="grow"></div>
+      <span class="pill">📝 ${esc(examKindName(exam.kind))}</span>
+    </div>
+    <div class="progress"><div style="width:${pct}%"></div></div>
+    <div class="sub center">第${exam.i+1}問 ／ 全${exam.ids.length}問（答え合わせは最後にまとめて）</div>
+    <div class="card" id="examQ" style="margin-top:12px">
+      <span class="pill" style="border-color:${sub.color};color:${sub.color}">${sub.emoji} ${sub.name}｜${esc(q.u)}</span>
+      <div class="qtext">${esc(q.q)}</div>
+      ${isInput ? `
+      <input type="text" id="ansIn" class="ans-input" placeholder="答えを入力" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <button class="btn-main" onclick="answerExamInput()">次の問題へ ▶</button>
+      ` : exam.currentOrder.map((ci,pos)=>`<button class="choice" onclick="answerExam(${pos})">${"❶❷❸❹"[pos]} ${esc(q.c[ci])}</button>`).join("")}
+    </div>
+    <div class="sub center">${isInput?"入力したらEnterキーでも進めます":"キーボードの 1〜4 でも答えられます"}</div>`;
+  if(isInput){ const el=document.getElementById("ansIn"); if(el) el.focus(); }
+}
+function recordExamAnswer(correct, given){
+  const id = exam.ids[exam.i];
+  const q = BANK[id];
+  exam.answers.push({id, correct, given});
+  S.answered++;
+  if(correct){
+    S.correct++; S.xp += 5; S.tickets += 1;
+    exam.gainedXp += 5; exam.gainedTickets += 1;
+    if(q.t==="input") S.inputCorrect++;
+  }
+  scheduleAnswer(id, correct, false);
+  exam.i++;
+  if(exam.i >= exam.ids.length) finishExam();
+  else renderExamQuestion();
+}
+window.answerExam = (pos)=>{
+  if(!exam || exam.currentType!=="choice" || !document.getElementById("examQ")) return;
+  const q = BANK[exam.ids[exam.i]];
+  const chosen = exam.currentOrder[pos];
+  if(chosen===undefined) return;
+  recordExamAnswer(chosen===0, q.c[chosen]);
+};
+window.answerExamInput = ()=>{
+  if(!exam || exam.currentType!=="input") return;
+  const el = document.getElementById("ansIn");
+  if(!el) return;
+  if(normalizeAnswerText(el.value)===""){ el.focus(); return; }
+  const q = BANK[exam.ids[exam.i]];
+  recordExamAnswer(answersMatch(el.value, q.ans, q.accept), el.value.trim());
+};
+window.quitExam = ()=>{
+  if(confirm("模擬テストを中断しますか？（ここまでの解答は復習の記録に残ります。点数はつきません）")){ exam = null; go("train"); }
+};
+function finishExam(){
+  const n = exam.answers.length;
+  const c = exam.answers.filter(a=>a.correct).length;
+  const score = Math.round(c / n * 100);
+  const E = S.exam;
+  const prevBest = E.best[exam.kind];
+  const newBest = prevBest===undefined || score > prevBest;
+  if(newBest) E.best[exam.kind] = score;
+  E.attempts++;
+  E.lastScore = score;
+  E.history.unshift({date:todayStr(), kind:exam.kind, score});
+  E.history = E.history.slice(0,10);
+  if(score===100){ S.tickets += 10; exam.gainedTickets += 10; }
+  updateStreak();
+  const newBadges = checkNewBadges();
+  save();
+  if(score>=80 || newBadges.length) soundWin(); else soundOK();
+
+  const bySub = {};
+  exam.answers.forEach(a=>{ const s=BANK[a.id].s; (bySub[s]=bySub[s]||{c:0,n:0}); bySub[s].n++; if(a.correct) bySub[s].c++; });
+  const breakdown = Object.entries(bySub).map(([s,v])=>`
+    <div class="row" style="margin-bottom:6px">
+      <span style="width:70px;font-size:13px">${SUBJECTS[s].emoji} ${SUBJECTS[s].name}</span>
+      <div class="masterybar grow"><div style="width:${Math.round(v.c/v.n*100)}%;background:${SUBJECTS[s].color}"></div></div>
+      <span class="sub" style="width:48px;text-align:right">${v.c}/${v.n}</span>
+    </div>`).join("");
+  const wrong = exam.answers.filter(a=>!a.correct);
+  examLastWrong = wrong.map(a=>a.id);
+  const review = wrong.map(a=>{
+    const q = BANK[a.id];
+    const right = q.t==="input" ? q.ans : q.c[0];
+    return `<div class="feedback ng" style="margin-bottom:10px">
+      <span class="sub">${SUBJECTS[q.s].emoji} ${SUBJECTS[q.s].name}｜${esc(q.u)}</span><br>
+      <b>${esc(q.q)}</b><br>
+      あなたの答え：${esc(a.given||"")}　→　正解：<b>${esc(right)}</b><br>
+      <span class="sub">${esc(q.e)}</span>
+    </div>`;
+  }).join("");
+  const comment = score===100 ? "満点！本番もこの調子で！" : score>=90 ? "すばらしい！ほぼ完ぺきです" : score>=70 ? "よくできています。まちがえた問題を解き直して仕上げよう" : score>=50 ? "あと一歩。解説を読んで、まちがえた問題から解き直そう" : "まずは「単元べつ」でひとつずつ固めていこう";
+  const kind = exam.kind;
+  const done = exam; exam = null;
+  app.innerHTML = `
+    <div class="card center">
+      <div class="result-emoji">${score===100?"💯":score>=80?"🎉":score>=50?"📝":"💪"}</div>
+      <h1>${esc(examKindName(kind))}　<span style="color:var(--gold)">${score}点</span></h1>
+      <div class="sub" style="margin:6px 0">${c}問正解 ／ ${n}問中${newBest?"｜🏅 自己ベスト更新！":""}</div>
+      <div class="sub" style="margin-bottom:10px">${comment}</div>
+      <div style="text-align:left">${breakdown}</div>
+      <div class="sub" style="margin-top:6px">獲得：+${done.gainedXp} XP ｜ 🎫+${done.gainedTickets}</div>
+      ${newBadges.map(b=>`<div class="feedback ok" style="margin-top:10px"><b>${b.emoji} バッジ獲得「${b.name}」</b><br><span class="sub">${b.desc}</span></div>`).join("")}
+      ${wrong.length?`<button class="btn-main" onclick="retryExamWrong()">🔁 まちがえた${wrong.length}問を解き直す</button>`:""}
+      <button class="btn-sub" onclick="startExam('${kind}')">📝 もう一度挑戦する</button>
+      <button class="btn-sub" onclick="setTrainSection('exam')">期末対策にもどる</button>
+    </div>
+    ${wrong.length?`<div class="card"><h2>📖 まちがえた問題の解説</h2>${review}</div>`:""}`;
+  nav("train");
+}
+window.retryExamWrong = ()=>{ if(examLastWrong.length) startSession(shuffle(examLastWrong), "期末対策・解き直し"); };
 
 /* ---- 修行の部屋（基礎ドリル） ---- */
 function renderDojoHome(segRow){
@@ -1644,6 +1976,14 @@ function ensureNextVisible(){
 }
 
 document.addEventListener("keydown",(ev)=>{
+  if(exam && document.getElementById("examQ")){
+    if(exam.currentType==="input"){
+      if(ev.key==="Enter"){ ev.preventDefault(); window.answerExamInput(); }
+    }else if(ev.key>="1" && ev.key<="4"){
+      window.answerExam(Number(ev.key)-1);
+    }
+    return;
+  }
   if(btl){
     if(ev.key>="1" && ev.key<="4" && !btl.answeredThisQ){
       window.answerBattle(Number(ev.key)-1);
@@ -1725,6 +2065,7 @@ function finishSession(){
 /* ---- バトルモード ---- */
 let btl = null;
 let dojo = null; // 修行の部屋（基礎ドリル）の進行状態
+let exam = null; // 期末テスト対策（模擬テスト）の進行状態
 
 let battleShowAll = false;
 window.toggleBattleAll = ()=>{ battleShowAll = !battleShowAll; renderBattle(); };
@@ -2447,7 +2788,7 @@ function renderScience(){
     <cite>Logan (1988) の自動化理論／流暢性（フルーエンシー）研究：基礎処理の自動化は上位の思考課題の成績を高める</cite>
 
     <h3>📚 収録範囲（中学1年）</h3>
-    <p>数学（正負の数・文字と式・一次方程式・比例と反比例・平面図形・空間図形・データの活用）／英語（be動詞・一般動詞・疑問詞・命令文とcan・名詞と代名詞・三単現・現在進行形・過去形）／国語（漢字・文法・語彙・古典）／理科（植物・動物の分類・物質・光音力・大地）／社会（世界の姿・気候と暮らし・世界の諸地域・歴史 古代〜鎌倉）— 全${BANK.length}問</p>
+    <p>数学（正負の数・文字と式・一次方程式・比例と反比例・平面図形・空間図形・データの活用）／英語（be動詞・一般動詞・疑問詞・命令文とcan・名詞と代名詞・三単現・現在進行形・感嘆文・過去形・過去進行形・There is / are）／国語（漢字・文法・語彙・古典）／理科（植物・動物の分類・物質・光音力・大地）／社会（世界の姿・気候と暮らし・世界の諸地域・歴史 古代〜鎌倉）— 全${BANK.length}問</p>
 
     <h3>🔒 プライバシーについて（保護者の方へ）</h3>
     <p>このアプリは<b>名前・メールアドレスなどの個人情報を一切集めません</b>。アカウント登録も不要です。学習の記録（XPや正誤）は<b>お使いの端末のブラウザの中だけ</b>に保存され、外部のサーバーには送信されません。広告・アクセス解析・Cookieも使っていません。記録を消したいときは下のボタンでいつでも削除できます。</p>
